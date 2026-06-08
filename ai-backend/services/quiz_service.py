@@ -108,4 +108,27 @@ def generate_quiz(
         ),
     )
 
-    return json.loads(response.text)
+    quiz_data = json.loads(response.text)
+    quiz_data["quiz_title"] = f"{topic} Quiz"
+
+    # Send to Google Apps Script to generate the form
+    if settings.GOOGLE_APPS_SCRIPT_URL:
+        import requests
+        try:
+            # Apps Script requires following redirects for POST
+            gas_res = requests.post(
+                settings.GOOGLE_APPS_SCRIPT_URL,
+                json=quiz_data,
+                headers={"Content-Type": "application/json"},
+                allow_redirects=True,
+                timeout=30
+            )
+            if gas_res.status_code == 200:
+                gas_data = gas_res.json()
+                if gas_data.get("status") == "success":
+                    quiz_data["google_form_url"] = gas_data.get("publishedUrl")
+                    quiz_data["google_form_edit_url"] = gas_data.get("editUrl")
+        except Exception as e:
+            print(f"Failed to generate Google Form: {e}")
+
+    return quiz_data

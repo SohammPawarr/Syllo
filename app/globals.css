@@ -46,16 +46,7 @@
   --color-brand-red: #F35B04;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: var(--color-black);
-    --foreground: var(--color-gray-100);
-    --muted: var(--color-gray-800);
-    --muted-foreground: var(--color-gray-400);
-    --border: var(--color-gray-700);
-  }
-}
-
+/* Enforced Light Theme */
 /* Base */
 body {
   background: var(--background);

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 interface ProcessingStateProps {
   jobId: string;
+  documentId: string;
 }
 
 const PHASE_LABELS: Record<string, string> = {
@@ -23,7 +24,10 @@ const PHASE_ICONS: Record<string, string> = {
   COMPLETED: "✅",
 };
 
-export default function ProcessingState({ jobId }: ProcessingStateProps) {
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+
+export default function ProcessingState({ jobId, documentId }: ProcessingStateProps) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["job-status", jobId],
     queryFn: async () => {
@@ -126,6 +130,21 @@ export default function ProcessingState({ jobId }: ProcessingStateProps) {
           );
         })}
       </div>
+
+      {isComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="pt-4"
+        >
+          <Link
+            href={`/dashboard/study/${documentId}`}
+            className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--color-deep-purple)] text-white font-bold rounded-lg hover:bg-[var(--color-light-purple)] transition-colors shadow-sm"
+          >
+            Start Studying <ArrowRight className="w-5 h-5" />
+          </Link>
+        </motion.div>
+      )}
     </div>
   );
 }

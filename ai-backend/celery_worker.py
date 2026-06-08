@@ -10,6 +10,12 @@ Pipeline:
 """
 
 import os
+import sys
+
+# Add the current directory to sys.path so celery can find 'services'
+sys.path.append(os.path.dirname(__file__))
+
+import time
 # pyrefly: ignore [missing-import]
 from celery import Celery
 from config import settings
@@ -83,6 +89,9 @@ def process_document_task(self, document_id: str, file_url: str):
         }
 
     except Exception as e:
+        import traceback
+        print("====== CELERY TASK FAILED ======")
+        traceback.print_exc()
+        print("================================")
         update_document_status(document_id, "FAILED")
-        self.update_state(state="FAILURE", meta={"error": str(e)})
-        raise
+        raise e

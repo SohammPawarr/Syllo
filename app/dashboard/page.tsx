@@ -57,8 +57,8 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
             Processing Status
           </h2>
-          {activeJobId ? (
-            <ProcessingState jobId={activeJobId} />
+          {activeJobId && uploadedFile ? (
+            <ProcessingState jobId={activeJobId} documentId={uploadedFile} />
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-[var(--muted-foreground)] text-sm text-center">
               <div className="w-12 h-12 bg-[var(--muted)] rounded-xl flex items-center justify-center text-2xl mb-3">

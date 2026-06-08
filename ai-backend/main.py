@@ -8,7 +8,9 @@ Endpoints:
   GET  /health        → Health check
 """
 
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, HTTPException
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from config import settings
@@ -63,14 +65,29 @@ class TaskStatusResponse(BaseModel):
     error: str | None = None
 
 
-class GenerateGraphRequest(BaseModel):
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    document_id: str
+    messages: list[ChatMessage]
+
+
+class ChatResponse(BaseModel):
+    status: str
+    reply: str
+
+
+class GenerateImageRequest(BaseModel):
     document_id: str
     topic: str
 
 
-class GenerateGraphResponse(BaseModel):
+class GenerateImageResponse(BaseModel):
     status: str
-    graph: dict
+    image_url: str
 
 
 class GenerateFlashcardsRequest(BaseModel):
@@ -177,36 +194,6 @@ async def generate_quiz(request: GenerateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/v1/generate-graph", response_model=GenerateGraphResponse)
-async def generate_graph(request: GenerateGraphRequest):
-    """
-    Generate a knowledge graph from the document chunks.
-    """
-    from services.rag_service import retrieve_relevant_chunks
-    from services.graph_service import generate_knowledge_graph
-
-    try:
-        # Step 1: RAG retrieval
-        context = retrieve_relevant_chunks(
-            document_id=request.document_id,
-            query=request.topic,
-            top_k=15,
-        )
-
-        # Step 2: Gemini generation
-        graph_data = generate_knowledge_graph(
-            context=context,
-            topic=request.topic,
-        )
-
-        return GenerateGraphResponse(status="success", graph=graph_data)
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/v1/generate-flashcards", response_model=GenerateFlashcardsResponse)
 async def generate_flashcards_route(request: GenerateFlashcardsRequest):
     """
@@ -231,6 +218,72 @@ async def generate_flashcards_route(request: GenerateFlashcardsRequest):
         )
 
         return GenerateFlashcardsResponse(status="success", flashcards=flashcards_data)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/chat", response_model=ChatResponse)
+async def chat_route(request: ChatRequest):
+    """
+    Chat with the document using RAG.
+    """
+    from services.rag_service import retrieve_relevant_chunks
+    from services.chat_service import generate_chat_response
+
+    try:
+        if not request.messages:
+            raise ValueError("Messages list cannot be empty")
+
+        current_query = request.messages[-1].content
+        
+        # Step 1: RAG retrieval
+        context = retrieve_relevant_chunks(
+            document_id=request.document_id,
+            query=current_query,
+            top_k=10,
+        )
+
+        # Step 2: Gemini generation
+        messages_dict = [{"role": m.role, "content": m.content} for m in request.messages]
+        reply = generate_chat_response(
+            context=context,
+            messages=messages_dict,
+        )
+
+        return ChatResponse(status="success", reply=reply)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/generate-image", response_model=GenerateImageResponse)
+async def generate_image_route(request: GenerateImageRequest):
+    """
+    Generate an image URL based on document topic.
+    """
+    from services.rag_service import retrieve_relevant_chunks
+    from services.image_service import generate_image_url
+
+    try:
+        # Step 1: RAG retrieval
+        context = retrieve_relevant_chunks(
+            document_id=request.document_id,
+            query=request.topic,
+            top_k=10,
+        )
+
+        # Step 2: Gemini prompt generation + Pollinations URL
+        image_url = generate_image_url(
+            context=context,
+            topic=request.topic,
+        )
+
+        return GenerateImageResponse(status="success", image_url=image_url)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

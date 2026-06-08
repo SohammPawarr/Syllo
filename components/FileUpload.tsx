@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import useDrivePicker from "react-google-drive-picker";
 
 interface FileUploadProps {
   onUploadComplete: (fileUri: string) => void;
@@ -17,6 +18,67 @@ export default function FileUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [openPicker, authResponse] = useDrivePicker();
+
+  const handleOpenPicker = () => {
+    openPicker({
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+      developerKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "",
+      viewId: "DOCS",
+      appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID || "",
+      showUploadView: true,
+      showUploadFolders: true,
+      supportDrives: true,
+      multiselect: false,
+      callbackFunction: async (data: any) => {
+        if (data.action === "picked") {
+          setIsUploading(true);
+          setUploadError("");
+          try {
+            const pickedFile = data.docs[0];
+            const token = authResponse?.access_token; // The token might be in the higher scope or data
+            
+            if (!token) {
+              setUploadError("Missing OAuth token to download the file.");
+              setIsUploading(false);
+              return;
+            }
+
+            const res = await fetch("/api/upload-drive", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                fileId: pickedFile.id,
+                fileName: pickedFile.name,
+                accessToken: token,
+              }),
+            });
+
+            if (!res.ok) throw new Error("Failed to process Drive file");
+
+            const { fileUri, documentId } = await res.json();
+            onUploadComplete(documentId);
+
+            const triggerRes = await fetch("/api/jobs/trigger", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ documentId, fileUrl: fileUri }),
+            });
+
+            if (triggerRes.ok) {
+              onJobStarted(documentId);
+            }
+          } catch (error) {
+            console.error(error);
+            setUploadError("Failed to import from Google Drive.");
+          } finally {
+            setIsUploading(false);
+          }
+        }
+      },
+    });
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -65,22 +127,22 @@ export default function FileUpload({
 
       if (!uploadRes.ok) throw new Error("Upload failed");
 
-      const { fileUri } = await uploadRes.json();
-      onUploadComplete(fileUri);
+      const { fileUri, documentId } = await uploadRes.json();
+      onUploadComplete(documentId); // We pass the documentId so StudyDashboard can use it
 
       // Trigger processing
       const triggerRes = await fetch("/api/jobs/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          documentId: "temp-" + Date.now(),
+          documentId: documentId,
           fileUrl: fileUri,
         }),
       });
 
       if (triggerRes.ok) {
-        const { task_id } = await triggerRes.json();
-        onJobStarted(task_id);
+        // We use the documentId as the jobId for polling status
+        onJobStarted(documentId);
       }
     } catch {
       setUploadError("Failed to upload. Please try again.");
@@ -134,12 +196,37 @@ export default function FileUpload({
             <p className="font-medium text-[var(--foreground)]">
               Drag & drop your PDF here
             </p>
-            <p className="text-sm text-[var(--muted-foreground)]">
+            <p className="text-sm text-[var(--muted-foreground)] mb-4">
               or click to browse
             </p>
           </div>
         )}
       </div>
+
+      {!file && (
+        <div className="mt-4">
+          <div className="flex items-center gap-4 mb-4">
+            <hr className="flex-1 border-[var(--border)]" />
+            <span className="text-sm text-[var(--muted-foreground)] font-medium">OR</span>
+            <hr className="flex-1 border-[var(--border)]" />
+          </div>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              handleOpenPicker();
+            }}
+            disabled={isUploading}
+            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-[#ea4335] text-[#ea4335] font-bold py-3 px-6 rounded-xl hover:bg-[#ea4335]/5 transition-colors"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 10.59L19.05 3.54l1.41 1.41L13.41 12l7.05 7.05-1.41 1.41L12 13.41l-7.05 7.05-1.41-1.41L10.59 12 3.54 4.95l1.41-1.41L12 10.59z" opacity="0" />
+              <path d="M7 3h10v2H7zm0 16h10v2H7zM3 7h2v10H3zm16 0h2v10h-2z" opacity="0"/>
+              <path d="M20.222 17.514L14.73 7.999a2.002 2.002 0 00-3.46 0L5.778 17.514a2.002 2.002 0 001.73 3.001h10.984a2.002 2.002 0 001.73-3.001zm-3.46 1.001H9.238l-2.02-3.5 3.5-6.062 2.02 3.5-3.5 6.062h3.46l3.5 6.062-3.5-6.062 2.02-3.5z" />
+            </svg>
+            Import from Google Drive / Classroom
+          </button>
+        </div>
+      )}
 
       {/* Error */}
       {uploadError && (

@@ -6,6 +6,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 # pyrefly: ignore [missing-import]
 from bson import ObjectId
+import certifi
 from config import settings
 
 _client: MongoClient | None = None
@@ -15,7 +16,7 @@ def get_db() -> Database:
     """Return a cached MongoDB database handle."""
     global _client
     if _client is None:
-        _client = MongoClient(settings.MONGODB_URI)
+        _client = MongoClient(settings.MONGODB_URI, tlsCAFile=certifi.where())
     return _client[settings.MONGODB_DB_NAME]
 
 
