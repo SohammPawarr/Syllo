@@ -1,8 +1,35 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Palette */
+  --color-deep-purple: #3D348B;
+  --color-light-purple: #7678ED;
+  --color-yellow: #F7B801;
+  --color-orange: #F18701;
+  --color-red-orange: #F35B04;
+
+  /* Neutrals */
+  --color-white: #FFFFFF;
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F4F4F5;
+  --color-gray-200: #E4E4E7;
+  --color-gray-300: #D4D4D8;
+  --color-gray-400: #A1A1AA;
+  --color-gray-500: #71717A;
+  --color-gray-600: #52525B;
+  --color-gray-700: #3F3F46;
+  --color-gray-800: #27272A;
+  --color-gray-900: #18181B;
+  --color-black: #09090B;
+
+  /* Semantic */
+  --background: var(--color-white);
+  --foreground: var(--color-gray-900);
+  --muted: var(--color-gray-100);
+  --muted-foreground: var(--color-gray-500);
+  --border: var(--color-gray-200);
+  --accent: var(--color-deep-purple);
+  --accent-foreground: var(--color-white);
 }
 
 @theme inline {
@@ -10,17 +37,54 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand colors available as Tailwind utilities */
+  --color-brand-deep: #3D348B;
+  --color-brand-purple: #7678ED;
+  --color-brand-yellow: #F7B801;
+  --color-brand-orange: #F18701;
+  --color-brand-red: #F35B04;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--color-black);
+    --foreground: var(--color-gray-100);
+    --muted: var(--color-gray-800);
+    --muted-foreground: var(--color-gray-400);
+    --border: var(--color-gray-700);
   }
 }
 
+/* Base */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--color-light-purple);
+  outline-offset: 2px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
 }
