@@ -2,32 +2,27 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 interface ProcessingStateProps {
   jobId: string;
   documentId: string;
+  onReady?: () => void;
 }
 
 const PHASE_LABELS: Record<string, string> = {
   PENDING: "Queued",
-  CHUNKING: "Splitting document into chunks…",
-  EMBEDDING: "Generating vector embeddings…",
-  READY: "Processing complete!",
-  COMPLETED: "Processing complete!",
+  CHUNKING: "Reading pages…",
+  EMBEDDING: "Memorizing facts…",
+  READY: "Ready!",
+  COMPLETED: "Ready!",
 };
 
-const PHASE_ICONS: Record<string, string> = {
-  PENDING: "⏳",
-  CHUNKING: "✂️",
-  EMBEDDING: "🧬",
-  READY: "✅",
-  COMPLETED: "✅",
-};
-
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-
-export default function ProcessingState({ jobId, documentId }: ProcessingStateProps) {
+export default function ProcessingState({
+  jobId,
+  documentId,
+  onReady,
+}: ProcessingStateProps) {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["job-status", jobId],
     queryFn: async () => {
@@ -36,115 +31,69 @@ export default function ProcessingState({ jobId, documentId }: ProcessingStatePr
       return res.json();
     },
     refetchInterval: (query) => {
-      // Stop polling once completed
-      if (query.state.data?.status === "COMPLETED") return false;
+      const status = query.state.data?.status;
+      if (status === "COMPLETED") {
+        onReady?.();
+        return false;
+      }
       return 3000;
     },
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-40">
-        <div className="w-6 h-6 border-2 border-brand-deep border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center gap-2 py-2">
+        <Loader2 className="w-4 h-4 animate-spin text-[var(--brand-light-blue)]" />
+        <span className="text-xs font-bold text-[var(--gray-500)] uppercase tracking-wider">Checking status…</span>
       </div>
     );
   }
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center h-40 text-brand-red text-sm">
-        <span className="text-2xl mb-2">⚠️</span>
-        <p>Failed to fetch job status</p>
-      </div>
+      <p className="text-xs font-bold text-[var(--gray-900)] py-1 bg-[var(--brand-yellow)] px-2 rounded-md inline-block border border-[var(--black)]/10">Failed to get status</p>
     );
   }
 
   const phase = data?.phase || "PENDING";
   const isComplete = data?.status === "COMPLETED";
+  const phases = ["PENDING", "CHUNKING", "EMBEDDING", "READY"];
+  const currentIdx = phases.indexOf(phase);
 
   return (
-    <div className="space-y-4">
-      {/* Current Phase */}
-      <motion.div
-        key={phase}
-        initial={{ opacity: 0, x: -8 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex items-center gap-3"
-      >
-        <div
-          className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg ${isComplete ? "bg-brand-deep" : "bg-brand-yellow"}`}
-        >
-          {PHASE_ICONS[phase] || "⏳"}
-        </div>
-        <div>
-          <p className="font-medium text-[var(--foreground)] text-sm">
+    <div className="space-y-3 py-1">
+      {/* Label */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isComplete ? (
+            <CheckCircle className="w-4 h-4 text-[var(--brand-blue)]" />
+          ) : (
+            <Loader2 className="w-4 h-4 animate-spin text-[var(--brand-light-blue)]" />
+          )}
+          <span className="text-xs font-bold text-[var(--gray-700)] uppercase tracking-wider">
             {PHASE_LABELS[phase] || phase}
-          </p>
-          <p className="text-xs text-[var(--muted-foreground)]">
-            Job: {jobId.slice(0, 8)}…
-          </p>
+          </span>
         </div>
-      </motion.div>
-
-      {/* Progress Steps */}
-      <div className="space-y-2">
-        {["PENDING", "CHUNKING", "EMBEDDING", "READY"].map((step) => {
-          const stepIndex = [
-            "PENDING",
-            "CHUNKING",
-            "EMBEDDING",
-            "READY",
-          ].indexOf(step);
-          const currentIndex = [
-            "PENDING",
-            "CHUNKING",
-            "EMBEDDING",
-            "READY",
-          ].indexOf(phase);
-          const isDone = stepIndex < currentIndex;
-          const isCurrent = stepIndex === currentIndex;
-
-          return (
-            <div key={step} className="flex items-center gap-3">
-              <div
-                className={`w-2.5 h-2.5 rounded-full ${
-                  isDone
-                    ? "bg-brand-deep"
-                    : isCurrent
-                      ? "bg-brand-orange"
-                      : "bg-[var(--border)]"
-                }`}
-              />
-              <span
-                className={`text-xs ${
-                  isDone
-                    ? "text-[var(--foreground)]"
-                    : isCurrent
-                      ? "text-brand-orange font-medium"
-                      : "text-[var(--muted-foreground)]"
-                }`}
-              >
-                {PHASE_LABELS[step]}
-              </span>
-            </div>
-          );
-        })}
+        {!isComplete && (
+          <span className="text-xs font-bold text-[var(--gray-400)]">
+            {Math.round(((currentIdx + 1) / phases.length) * 100)}%
+          </span>
+        )}
       </div>
 
-      {isComplete && (
+      {/* Progress bar */}
+      <div className="h-2.5 bg-[var(--gray-200)] rounded-full overflow-hidden shadow-inner">
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="pt-4"
-        >
-          <Link
-            href={`/dashboard/study/${documentId}`}
-            className="flex items-center justify-center gap-2 w-full py-3 bg-[var(--color-deep-purple)] text-white font-bold rounded-lg hover:bg-[var(--color-light-purple)] transition-colors shadow-sm"
-          >
-            Start Studying <ArrowRight className="w-5 h-5" />
-          </Link>
-        </motion.div>
-      )}
+          className="h-full bg-[var(--brand-light-blue)] rounded-full"
+          initial={{ width: "0%" }}
+          animate={{
+            width: isComplete
+              ? "100%"
+              : `${((currentIdx + 1) / phases.length) * 100}%`,
+          }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </div>
     </div>
   );
 }

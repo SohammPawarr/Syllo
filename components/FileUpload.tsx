@@ -1,23 +1,28 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { Upload, FileText, Loader2, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import useDrivePicker from "react-google-drive-picker";
+import { useCredits } from "@/app/dashboard/layout";
 
 interface FileUploadProps {
-  onUploadComplete: (fileUri: string) => void;
+  onUploadComplete: (documentId: string) => void;
   onJobStarted: (jobId: string) => void;
+  compact?: boolean;
 }
 
 export default function FileUpload({
   onUploadComplete,
   onJobStarted,
+  compact = false,
 }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { refreshCredits } = useCredits();
 
   const [openPicker, authResponse] = useDrivePicker();
 
@@ -37,10 +42,10 @@ export default function FileUpload({
           setUploadError("");
           try {
             const pickedFile = data.docs[0];
-            const token = authResponse?.access_token; // The token might be in the higher scope or data
-            
+            const token = authResponse?.access_token;
+
             if (!token) {
-              setUploadError("Missing OAuth token to download the file.");
+              setUploadError("Missing OAuth token.");
               setIsUploading(false);
               return;
             }
@@ -59,6 +64,7 @@ export default function FileUpload({
 
             const { fileUri, documentId } = await res.json();
             onUploadComplete(documentId);
+            refreshCredits();
 
             const triggerRes = await fetch("/api/jobs/trigger", {
               method: "POST",
@@ -66,11 +72,8 @@ export default function FileUpload({
               body: JSON.stringify({ documentId, fileUrl: fileUri }),
             });
 
-            if (triggerRes.ok) {
-              onJobStarted(documentId);
-            }
-          } catch (error) {
-            console.error(error);
+            if (triggerRes.ok) onJobStarted(documentId);
+          } catch {
             setUploadError("Failed to import from Google Drive.");
           } finally {
             setIsUploading(false);
@@ -94,9 +97,15 @@ export default function FileUpload({
     e.preventDefault();
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files[0];
+
     if (droppedFile && droppedFile.type === "application/pdf") {
-      setFile(droppedFile);
-      setUploadError("");
+      if (droppedFile.size > 10 * 1024 * 1024) {
+        setUploadError("File exceeds 10MB limit.");
+        setFile(null);
+      } else {
+        setFile(droppedFile);
+        setUploadError("");
+      }
     } else {
       setUploadError("Please upload a PDF file.");
     }
@@ -105,14 +114,18 @@ export default function FileUpload({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setUploadError("");
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setUploadError("File exceeds 10MB limit.");
+        setFile(null);
+      } else {
+        setFile(selectedFile);
+        setUploadError("");
+      }
     }
   };
 
   const handleUpload = async () => {
     if (!file) return;
-
     setIsUploading(true);
     setUploadError("");
 
@@ -125,34 +138,33 @@ export default function FileUpload({
         body: formData,
       });
 
-      if (!uploadRes.ok) throw new Error("Upload failed");
+      const resData = await uploadRes.json();
 
-      const { fileUri, documentId } = await uploadRes.json();
-      onUploadComplete(documentId); // We pass the documentId so StudyDashboard can use it
+      if (!uploadRes.ok) {
+        throw new Error(resData.error || "Upload failed");
+      }
 
-      // Trigger processing
+      const { fileUri, documentId } = resData;
+      onUploadComplete(documentId);
+      refreshCredits();
+      setFile(null);
+
       const triggerRes = await fetch("/api/jobs/trigger", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          documentId: documentId,
-          fileUrl: fileUri,
-        }),
+        body: JSON.stringify({ documentId, fileUrl: fileUri }),
       });
 
-      if (triggerRes.ok) {
-        // We use the documentId as the jobId for polling status
-        onJobStarted(documentId);
-      }
-    } catch {
-      setUploadError("Failed to upload. Please try again.");
+      if (triggerRes.ok) onJobStarted(documentId);
+    } catch (err: any) {
+      setUploadError(err.message || "Upload failed.");
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <div>
+    <div className="space-y-3">
       {/* Drop Zone */}
       <div
         onDragOver={handleDragOver}
@@ -160,13 +172,13 @@ export default function FileUpload({
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`
-          border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors
+          border-2 border-dashed rounded-2xl ${compact ? "p-4" : "p-8"} text-center cursor-pointer transition-all duration-200 shadow-sm
           ${
             isDragging
-              ? "border-brand-purple bg-brand-purple/5"
+              ? "border-[var(--brand-blue)] bg-[var(--brand-blue)]/5 scale-[1.02]"
               : file
-                ? "border-brand-deep bg-brand-deep/5"
-                : "border-[var(--border)] hover:border-brand-purple"
+                ? "border-[var(--brand-light-blue)] bg-[var(--gray-50)]"
+                : "border-[var(--gray-300)] hover:border-[var(--brand-light-blue)] bg-[var(--white)]"
           }
         `}
       >
@@ -179,76 +191,91 @@ export default function FileUpload({
         />
 
         {file ? (
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 bg-brand-deep rounded-xl flex items-center justify-center text-white text-xl">
-              📄
+          <div className="flex items-center gap-3 bg-[var(--white)] p-2 rounded-xl border border-[var(--gray-200)] shadow-sm">
+            <div className="w-10 h-10 bg-[var(--brand-yellow)] rounded-lg border border-[var(--black)]/10 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-[var(--gray-900)]" />
             </div>
-            <p className="font-medium text-[var(--foreground)]">{file.name}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              {(file.size / 1024 / 1024).toFixed(2)} MB
-            </p>
+            <div className="min-w-0 text-left flex-1">
+              <p className="text-sm font-bold text-[var(--gray-900)] truncate">{file.name}</p>
+              <p className="text-xs font-medium text-[var(--gray-500)]">
+                {(file.size / 1024 / 1024).toFixed(1)} MB
+              </p>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setFile(null);
+              }}
+              className="p-1.5 rounded-full hover:bg-[var(--gray-100)] text-[var(--gray-500)] hover:text-[var(--black)] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-12 h-12 bg-[var(--muted)] rounded-xl flex items-center justify-center text-2xl">
-              ☁️
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-[var(--brand-light-blue)]/10 flex items-center justify-center">
+              <Upload className="w-6 h-6 text-[var(--brand-light-blue)]" />
             </div>
-            <p className="font-medium text-[var(--foreground)]">
-              Drag & drop your PDF here
-            </p>
-            <p className="text-sm text-[var(--muted-foreground)] mb-4">
-              or click to browse
-            </p>
+            <div>
+              <p className="text-sm font-bold text-[var(--gray-700)]">
+                Drop PDF or Browse
+              </p>
+              <p className="text-[10px] font-bold text-[var(--gray-400)] uppercase tracking-wider mt-1">
+                Max 10MB
+              </p>
+            </div>
           </div>
         )}
       </div>
 
-      {!file && (
-        <div className="mt-4">
-          <div className="flex items-center gap-4 mb-4">
-            <hr className="flex-1 border-[var(--border)]" />
-            <span className="text-sm text-[var(--muted-foreground)] font-medium">OR</span>
-            <hr className="flex-1 border-[var(--border)]" />
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              handleOpenPicker();
-            }}
-            disabled={isUploading}
-            className="w-full flex items-center justify-center gap-3 bg-white border-2 border-[#ea4335] text-[#ea4335] font-bold py-3 px-6 rounded-xl hover:bg-[#ea4335]/5 transition-colors"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 10.59L19.05 3.54l1.41 1.41L13.41 12l7.05 7.05-1.41 1.41L12 13.41l-7.05 7.05-1.41-1.41L10.59 12 3.54 4.95l1.41-1.41L12 10.59z" opacity="0" />
-              <path d="M7 3h10v2H7zm0 16h10v2H7zM3 7h2v10H3zm16 0h2v10h-2z" opacity="0"/>
-              <path d="M20.222 17.514L14.73 7.999a2.002 2.002 0 00-3.46 0L5.778 17.514a2.002 2.002 0 001.73 3.001h10.984a2.002 2.002 0 001.73-3.001zm-3.46 1.001H9.238l-2.02-3.5 3.5-6.062 2.02 3.5-3.5 6.062h3.46l3.5 6.062-3.5-6.062 2.02-3.5z" />
-            </svg>
-            Import from Google Drive / Classroom
-          </button>
-        </div>
+      {/* Google Drive import */}
+      {!file && !compact && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            handleOpenPicker();
+          }}
+          disabled={isUploading}
+          className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[var(--gray-200)] text-[var(--gray-600)] text-sm font-bold rounded-xl hover:border-[var(--brand-light-blue)] hover:text-[var(--brand-blue)] hover:bg-[var(--gray-50)] transition-all"
+        >
+          <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" className="w-4 h-4 opacity-70" alt="Drive" />
+          Import from Google Drive
+        </button>
       )}
 
       {/* Error */}
-      {uploadError && (
-        <p className="text-brand-red text-sm mt-3">{uploadError}</p>
-      )}
+      <AnimatePresence>
+        {uploadError && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-[var(--white)] text-xs font-bold text-center bg-red-500 py-2 rounded-lg"
+          >
+            {uploadError}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
       {/* Upload Button */}
       {file && (
         <motion.button
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           onClick={handleUpload}
           disabled={isUploading}
-          className="mt-4 w-full bg-brand-deep text-white font-semibold py-3 px-6 rounded-xl hover:bg-brand-purple transition-colors disabled:opacity-60 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 py-3.5 bg-[var(--brand-blue)] text-[var(--white)] font-bold text-sm rounded-2xl hover:bg-[var(--brand-light-blue)] disabled:opacity-50 transition-colors shadow-sm cursor-pointer"
         >
           {isUploading ? (
-            <span className="flex items-center justify-center gap-2">
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
               Uploading...
-            </span>
+            </>
           ) : (
-            "Upload & Process"
+            <>
+              <Upload className="w-5 h-5" />
+              Start Study Session
+            </>
           )}
         </motion.button>
       )}

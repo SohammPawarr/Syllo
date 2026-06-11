@@ -1,15 +1,20 @@
 """Service for generating detailed image prompts using Gemini."""
 
 # pyrefly: ignore [missing-import]
-# pyrefly: ignore [missing-import]
-import google.generativeai as genai
+from groq import Groq
 from config import settings
 import urllib.parse
 
-genai.configure(api_key=settings.GEMINI_API_KEY)
+# Initialize Groq client lazy loading
+_client = None
 
-# Use the pro model
-model = genai.GenerativeModel("gemini-1.5-pro")
+def get_groq_client():
+    global _client
+    if _client is None:
+        if not settings.GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY is not configured")
+        _client = Groq(api_key=settings.GROQ_API_KEY)
+    return _client
 
 def generate_image_url(context: str, topic: str) -> str:
     """
@@ -31,12 +36,23 @@ Requirements for the prompt:
 4. Output ONLY the raw prompt text itself.
 """
 
-    response = model.generate_content(prompt)
-    image_prompt = response.text.strip()
+    client = get_groq_client()
+
+    response = client.chat.completions.create(
+        model=settings.GROQ_MODEL,
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.7,
+    )
+    image_prompt = response.choices[0].message.content.strip()
+    
+    import random
+    seed = random.randint(1, 1000000)
     
     # URL encode the prompt for Pollinations
     encoded_prompt = urllib.parse.quote(image_prompt)
     
-    # Construct the final URL
-    url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&nologo=true"
+    # Construct the final URL using the updated Pollinations API
+    url = f"https://pollinations.ai/p/{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}"
     return url

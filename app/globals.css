@@ -1,70 +1,165 @@
 @import "tailwindcss";
 
-:root {
-  /* Primary Palette */
-  --color-deep-purple: #3D348B;
-  --color-light-purple: #7678ED;
-  --color-yellow: #F7B801;
-  --color-orange: #F18701;
-  --color-red-orange: #F35B04;
+/* ═══════════════════════════════════════════════════
+   FONT FACE — Monument Extended + Neue Haas Grotesk
+   ═══════════════════════════════════════════════════ */
 
-  /* Neutrals */
-  --color-white: #FFFFFF;
-  --color-gray-50: #FAFAFA;
-  --color-gray-100: #F4F4F5;
-  --color-gray-200: #E4E4E7;
-  --color-gray-300: #D4D4D8;
-  --color-gray-400: #A1A1AA;
-  --color-gray-500: #71717A;
-  --color-gray-600: #52525B;
-  --color-gray-700: #3F3F46;
-  --color-gray-800: #27272A;
-  --color-gray-900: #18181B;
-  --color-black: #09090B;
-
-  /* Semantic */
-  --background: var(--color-white);
-  --foreground: var(--color-gray-900);
-  --muted: var(--color-gray-100);
-  --muted-foreground: var(--color-gray-500);
-  --border: var(--color-gray-200);
-  --accent: var(--color-deep-purple);
-  --accent-foreground: var(--color-white);
+@font-face {
+  font-family: 'Monument Extended';
+  src: url('/fonts/MonumentExtended/MonumentExtended-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
+
+@font-face {
+  font-family: 'Monument Extended';
+  src: url('/fonts/MonumentExtended/MonumentExtended-Ultrabold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Haas Grotesk';
+  src: url('/fonts/neuehaasgrotesk/neuehaasgrottext-55roman-trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Haas Grotesk';
+  src: url('/fonts/neuehaasgrotesk/neuehaasgrottext-56italic-trial.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Haas Grotesk';
+  src: url('/fonts/neuehaasgrotesk/neuehaasgrottext-65medium-trial.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neue Haas Grotesk';
+  src: url('/fonts/neuehaasgrotesk/neuehaasgrottext-75bold-trial.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ═══════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — SYLLO Theme (Blue, Yellow, White, Black)
+   ═══════════════════════════════════════════════════ */
+
+:root {
+  /* Brand Palette (40:40:20 Ratio) */
+  --brand-blue: #0F2A66;        /* Deep navy blue */
+  --brand-light-blue: #0F2A66;  /* Same as brand-blue, shades only for shadowing */
+  --brand-yellow: #FACC15;      /* Bright, clear yellow */
+  
+  /* Secondary / Structural */
+  --black: #000000;
+  --white: #FFFFFF;
+  
+  /* Neutrals */
+  --gray-50: #F8F9FA;
+  --gray-100: #F1F3F5;
+  --gray-200: #E9ECEF;
+  --gray-300: #DEE2E6;
+  --gray-400: #CED4DA;
+  --gray-500: #ADB5BD;
+  --gray-600: #868E96;
+  --gray-700: #495057;
+  --gray-800: #343A40;
+  --gray-900: #212529;
+
+  /* Semantic Variables */
+  --bg-primary: var(--gray-50);
+  --bg-secondary: var(--white);
+  --bg-tertiary: var(--gray-100);
+  
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-700);
+  --text-muted: var(--gray-500);
+  
+  --border-color: var(--gray-200);
+  --border-dark: var(--gray-300);
+
+  /* Typography */
+  --font-heading: 'Monument Extended', 'Outfit', system-ui, sans-serif;
+  --font-body: 'Neue Haas Grotesk', 'Inter', system-ui, sans-serif;
+
+  /* Transitions */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════
+   TAILWIND THEME INLINE
+   ═══════════════════════════════════════════════════ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
 
-  /* Brand colors available as Tailwind utilities */
-  --color-brand-deep: #3D348B;
-  --color-brand-purple: #7678ED;
-  --color-brand-yellow: #F7B801;
-  --color-brand-orange: #F18701;
-  --color-brand-red: #F35B04;
+  /* Making brand colors available as native Tailwind utilities */
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-light-blue: var(--brand-light-blue);
+  --color-brand-yellow: var(--brand-yellow);
 }
 
-/* Enforced Light Theme */
-/* Base */
+/* ═══════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--gray-50);
+  color-scheme: light;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  overflow: hidden;
 }
 
-/* Focus ring */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════
+   FOCUS RING
+   ═══════════════════════════════════════════════════ */
+
 *:focus-visible {
-  outline: 2px solid var(--color-light-purple);
+  outline: 3px solid var(--brand-light-blue);
   outline-offset: 2px;
 }
 
-/* Scrollbar */
+/* ═══════════════════════════════════════════════════
+   SCROLLBAR — Light Theme
+   ═══════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -72,10 +167,143 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-gray-300);
-  border-radius: 3px;
+  background: var(--gray-300);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-gray-400);
+  background: var(--gray-400);
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
+}
+
+/* ═══════════════════════════════════════════════════
+   UTILITY CLASSES & SPECIAL STYLES
+   ═══════════════════════════════════════════════════ */
+
+.bg-notebook-grid {
+  background-color: var(--bg-secondary);
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Soft Shadows for floating elements */
+.shadow-soft {
+  box-shadow: 0 8px 24px -4px rgba(29, 78, 216, 0.08), 0 4px 10px -4px rgba(29, 78, 216, 0.04);
+}
+
+/* Neobrutalism slight solid drop shadow for buttons if needed */
+.shadow-solid {
+  box-shadow: 2px 2px 0 0 var(--brand-blue);
+}
+
+/* Typing dots animation */
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.typing-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-light-blue);
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Light Theme Prose Overrides for Markdown */
+.light-prose {
+  color: var(--text-primary);
+}
+
+.light-prose h1, .light-prose h2, .light-prose h3 {
+  color: var(--brand-blue);
+  font-family: var(--font-heading);
+}
+
+.light-prose p {
+  color: var(--text-secondary);
+  margin-bottom: 0.75em;
+}
+
+.light-prose strong {
+  color: var(--gray-900);
+  font-weight: 700;
+}
+
+.light-prose code {
+  background: var(--gray-100);
+  color: var(--brand-blue);
+  padding: 0.15em 0.4em;
+  border-radius: 6px;
+  font-size: 0.9em;
+  border: 1px solid var(--gray-200);
+}
+
+.light-prose pre {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 1em;
+  overflow-x: auto;
+}
+
+.light-prose pre code {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.light-prose a {
+  color: var(--brand-light-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+.light-prose ul, .light-prose ol {
+  color: var(--text-secondary);
+  padding-left: 1.5em;
+}
+
+.light-prose li {
+  margin-bottom: 0.25em;
+}
+
+/* Glass panel effect for mobile drawers (Light mode) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Keyframes */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+.animate-fade-in { animation: fadeIn 0.4s var(--ease-out) forwards; }
+.animate-slide-up { animation: slideUp 0.5s var(--ease-out) forwards; }
+.animate-slide-in-left { animation: slideInLeft 0.3s var(--ease-out) forwards; }
+.animate-slide-in-right { animation: slideInRight 0.3s var(--ease-out) forwards; }

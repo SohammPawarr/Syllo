@@ -9,6 +9,8 @@ const UserSchema = new mongoose.Schema({
     documentsProcessed: { type: Number, default: 0 },
     tokensConsumed: { type: Number, default: 0 }
   },
+  credits: { type: Number, default: 10000 },
+  lastCreditReset: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
 

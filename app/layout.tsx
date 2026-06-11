@@ -1,17 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
 
-const inter = Inter({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Syllo — AI-Powered Quiz Generator",
+  title: "SYLLO — AI Study Workspace",
   description:
-    "Upload documents, generate intelligent quizzes, and export to Google Forms with Syllo AI.",
+    "Upload documents, chat with AI, generate quizzes, flashcards, and images — all in one workspace.",
 };
 
 export default function RootLayout({
@@ -20,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+    <html lang="en" className="h-full">
+      <body className="h-full">
         <Providers>{children}</Providers>
       </body>
     </html>

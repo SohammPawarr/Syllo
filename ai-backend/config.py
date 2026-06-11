@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env.local")
-load_dotenv(env_path)
+load_dotenv(env_path, override=True)
 
 
 class Settings:
@@ -13,9 +13,9 @@ class Settings:
     MONGODB_URI: str = os.getenv("MONGODB_URI", "")
     MONGODB_DB_NAME: str = os.getenv("MONGODB_DB_NAME", "syllo")
 
-    # Gemini
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    # Groq
+    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
     # External Integrations
     GOOGLE_APPS_SCRIPT_URL: str = os.getenv("GOOGLE_APPS_SCRIPT_URL", "")

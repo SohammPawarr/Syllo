@@ -2,16 +2,40 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { type ReactNode } from "react";
+import { type ReactNode, useEffect, useState, createContext, useContext, useCallback } from "react";
+import { X, Menu, Zap, LogOut, BookOpen } from "lucide-react";
+
+/* ── Credits context so children can read/refresh credits ── */
+interface CreditsContextType {
+  credits: number | null;
+  refreshCredits: () => void;
+}
+const CreditsContext = createContext<CreditsContextType>({ credits: null, refreshCredits: () => {} });
+export const useCredits = () => useContext(CreditsContext);
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
+  const [credits, setCredits] = useState<number | null>(null);
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
+
+  const refreshCredits = useCallback(() => {
+    fetch("/api/user/credits")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.credits !== undefined) setCredits(data.credits);
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (session) refreshCredits();
+  }, [session, refreshCredits]);
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--background)]">
-        <div className="w-8 h-8 border-3 border-brand-deep border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen flex items-center justify-center bg-notebook-grid">
+        <div className="w-8 h-8 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -21,83 +45,120 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen flex bg-[var(--background)]">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-[var(--border)] bg-[var(--muted)] flex flex-col">
-        {/* Logo */}
-        <div className="p-6 border-b border-[var(--border)]">
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-brand-deep rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
-            <span className="font-bold text-lg text-[var(--foreground)]">
-              Syllo
-            </span>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          <NavItem href="/dashboard" icon="📊" label="Dashboard" />
-          <NavItem href="/dashboard/documents" icon="📁" label="Documents" />
-          <NavItem href="/dashboard/quizzes" icon="📝" label="Quizzes" />
-          <NavItem href="/dashboard/knowledge" icon="🧠" label="Knowledge Graph" />
-        </nav>
-
-        {/* User Section */}
-        <div className="p-4 border-t border-[var(--border)]">
-          <div className="flex items-center gap-3 mb-3">
-            {session.user?.image ? (
-              <img
-                src={session.user.image}
-                alt=""
-                className="w-8 h-8 rounded-full"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-brand-purple rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {session.user?.name?.[0] || "U"}
+    <CreditsContext.Provider value={{ credits, refreshCredits }}>
+      {/* Edge-to-edge container */}
+      <div className="h-screen w-full flex flex-col bg-[var(--white)] overflow-hidden">
+        
+        {/* ═══ HEADER BAR ═══ */}
+        <div className="w-full bg-[var(--white)] border-b border-[var(--gray-200)] pb-2 px-2 md:px-4 pt-2 shadow-sm z-50">
+          <header className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 rounded-full bg-[var(--white)] border-2 border-[var(--black)] shadow-sm max-w-[1920px] mx-auto w-full">
+            
+            {/* Left: Hamburger (mobile) + Logo */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setLeftOpen(!leftOpen)}
+                className="lg:hidden p-1.5 rounded-full hover:bg-[var(--gray-100)] transition-colors text-[var(--black)]"
+                aria-label="Toggle documents panel"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[var(--brand-yellow)] border-2 border-[var(--black)] flex items-center justify-center shadow-solid overflow-hidden shrink-0">
+                  <span className="text-lg">🤖</span>
+                </div>
+                <span className="font-heading text-lg md:text-xl font-extrabold tracking-widest text-[var(--black)] select-none mt-1">
+                  SYLLO
+                </span>
               </div>
-            )}
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                {session.user?.name}
-              </p>
-              <p className="text-xs text-[var(--muted-foreground)] truncate">
-                {session.user?.email}
-              </p>
             </div>
-          </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/" })}
-            className="w-full text-left text-sm text-[var(--muted-foreground)] hover:text-brand-red transition-colors cursor-pointer"
-          >
-            Sign out
-          </button>
+
+            {/* Right: Credits, User, Tools toggle */}
+            <div className="flex items-center gap-3">
+              {credits !== null && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold text-[var(--brand-blue)] shadow-sm">
+                  <Zap className="w-3.5 h-3.5 fill-[var(--brand-yellow)] text-[var(--brand-blue)]" />
+                  <span className="hidden sm:inline">{credits.toLocaleString()} pts</span>
+                </div>
+              )}
+
+              <button
+                onClick={() => setRightOpen(!rightOpen)}
+                className="lg:hidden p-1.5 rounded-full bg-[var(--white)] border border-[var(--black)]/10 shadow-sm text-[var(--brand-blue)] hover:bg-[var(--gray-50)] transition-colors"
+                aria-label="Toggle tools panel"
+              >
+                <BookOpen className="w-5 h-5" />
+              </button>
+
+              {/* User Info (Desktop) */}
+              <div className="hidden sm:flex items-center gap-2 ml-2">
+                <span className="text-xs font-bold text-[var(--black)]">{session.user?.name?.split(" ")[0]}</span>
+                {session.user?.image ? (
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="w-8 h-8 rounded-full border-2 border-[var(--black)] shadow-sm object-cover bg-[var(--white)]"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full border-2 border-[var(--black)] bg-[var(--brand-blue)] text-[var(--white)] flex items-center justify-center text-xs font-bold shadow-sm">
+                    {session.user?.name?.[0] || "U"}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="p-1.5 rounded-full hover:bg-[var(--gray-100)] transition-colors text-[var(--gray-700)] hover:text-[var(--black)]"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+              </button>
+            </div>
+          </header>
         </div>
-      </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">{children}</main>
-    </div>
-  );
-}
+        {/* ═══ BODY: 3-column workspace ═══ */}
+        <div className="flex-1 flex overflow-hidden relative w-full bg-[var(--white)]">
+          {children}
+        </div>
 
-function NavItem({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--background)] transition-colors"
-    >
-      <span className="text-base">{icon}</span>
-      {label}
-    </Link>
+        {/* ═══ MOBILE OVERLAY DRAWERS ═══ */}
+        {/* Backdrop */}
+        {(leftOpen || rightOpen) && (
+          <div
+            className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            onClick={() => {
+              setLeftOpen(false);
+              setRightOpen(false);
+            }}
+          />
+        )}
+
+        {/* Left drawer (documents) */}
+        {leftOpen && (
+          <div className="lg:hidden fixed inset-y-0 left-0 w-72 z-[60] bg-[var(--white)] animate-slide-in-left border-r-4 border-[var(--black)] shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
+              <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">DOCUMENTS</span>
+              <button onClick={() => setLeftOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div id="mobile-left-panel" className="overflow-y-auto flex-1 pb-6" />
+          </div>
+        )}
+
+        {/* Right drawer (tools) */}
+        {rightOpen && (
+          <div className="lg:hidden fixed inset-y-0 right-0 w-72 z-[60] bg-[var(--white)] animate-slide-in-right border-l-4 border-[var(--black)] shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
+              <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">STUDY TOOLS</span>
+              <button onClick={() => setRightOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div id="mobile-right-panel" className="overflow-y-auto flex-1 pb-6" />
+          </div>
+        )}
+      </div>
+    </CreditsContext.Provider>
   );
 }

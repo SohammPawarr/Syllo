@@ -1,10 +1,26 @@
 import { NextResponse } from 'next/server';
 
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:7860';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { deductCredits } from '@/lib/db/userService';
+
+const QUIZ_COST = 500;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+      await deductCredits(session.user.email, QUIZ_COST);
+    } catch (e: any) {
+      return NextResponse.json({ error: e.message }, { status: 402 });
+    }
 
     const backendBody = {
       ...body,

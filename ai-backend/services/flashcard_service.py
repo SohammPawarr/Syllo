@@ -2,12 +2,19 @@
 
 import json
 # pyrefly: ignore [missing-import]
-import google.generativeai as genai
+from groq import Groq
 from config import settings
 
-# Configure Gemini on module load
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
+# Initialize Groq client lazy loading
+_client = None
+
+def get_groq_client():
+    global _client
+    if _client is None:
+        if not settings.GROQ_API_KEY:
+            raise ValueError("GROQ_API_KEY is not configured")
+        _client = Groq(api_key=settings.GROQ_API_KEY)
+    return _client
 
 
 def build_flashcard_prompt(
@@ -52,19 +59,17 @@ def generate_flashcards(
     Call Gemini to generate structured flashcards from the given context.
     Returns parsed JSON dict.
     """
-    if not settings.GEMINI_API_KEY:
-        raise ValueError("GEMINI_API_KEY is not configured")
+    client = get_groq_client()
+    system_prompt = build_flashcard_prompt(context, topic, count)
 
-    model = genai.GenerativeModel(settings.GEMINI_MODEL)
-
-    prompt = build_flashcard_prompt(context, topic, count)
-
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
-            temperature=0.3,
-            response_mime_type="application/json",
-        ),
+    response = client.chat.completions.create(
+        model=settings.GROQ_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": "Generate the flashcards now."}
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.3,
     )
 
-    return json.loads(response.text)
+    return json.loads(response.choices[0].message.content)

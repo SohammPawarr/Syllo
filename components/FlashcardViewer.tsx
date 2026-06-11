@@ -1,19 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Share } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, X, Share } from "lucide-react";
 
 interface Flashcard {
   front: string;
   back: string;
 }
 
-interface FlashcardViewerProps {
+interface FlashcardModalProps {
   flashcards: Flashcard[];
+  onClose: () => void;
 }
 
-export default function FlashcardViewer({ flashcards }: FlashcardViewerProps) {
+export default function FlashcardModal({ flashcards, onClose }: FlashcardModalProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -31,7 +32,9 @@ export default function FlashcardViewer({ flashcards }: FlashcardViewerProps) {
   const handlePrev = () => {
     setIsFlipped(false);
     setTimeout(() => {
-      setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+      setCurrentIndex(
+        (prev) => (prev - 1 + flashcards.length) % flashcards.length
+      );
     }, 150);
   };
 
@@ -44,7 +47,7 @@ export default function FlashcardViewer({ flashcards }: FlashcardViewerProps) {
           title: "Syllo Study Flashcards",
           questions: flashcards.map((f) => ({
             question: f.front,
-            options: ["True", "False"], // Placeholder for simple export
+            options: ["True", "False"],
             correct_answer_index: 0,
             explanation: f.back,
           })),
@@ -54,7 +57,7 @@ export default function FlashcardViewer({ flashcards }: FlashcardViewerProps) {
         const data = await res.json();
         if (data.formUrl) window.open(data.formUrl, "_blank");
       } else {
-        alert("Failed to export to Google Forms. Ensure you are signed in.");
+        alert("Failed to export. Ensure you are signed in.");
       }
     } catch (err) {
       console.error(err);
@@ -62,66 +65,103 @@ export default function FlashcardViewer({ flashcards }: FlashcardViewerProps) {
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-2xl mx-auto space-y-8">
-      {/* 3D Flip Card Container */}
-      <div 
-        className="relative w-full aspect-[3/2] cursor-pointer [perspective:1000px]"
-        onClick={() => setIsFlipped(!isFlipped)}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-[var(--gray-900)]/80 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="relative w-full max-w-xl"
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          className="w-full h-full relative [transform-style:preserve-3d]"
-          animate={{ rotateY: isFlipped ? 180 : 0 }}
-          transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
-        >
-          {/* Front */}
-          <div className="absolute inset-0 w-full h-full rounded-2xl bg-white border-2 border-[var(--color-light-purple)] p-8 flex items-center justify-center text-center [backface-visibility:hidden] shadow-lg">
-            <h3 className="text-3xl font-bold text-[var(--color-deep-purple)]">
-              {currentCard.front}
-            </h3>
-            <div className="absolute bottom-4 text-sm text-[var(--muted-foreground)]">
-              Click to flip
-            </div>
-          </div>
-
-          {/* Back */}
-          <div 
-            className="absolute inset-0 w-full h-full rounded-2xl bg-[var(--color-deep-purple)] border-2 border-[var(--color-deep-purple)] p-8 flex items-center justify-center text-center shadow-lg"
-            style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
-          >
-            <p className="text-2xl font-medium text-white leading-relaxed">
-              {currentCard.back}
-            </p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Controls */}
-      <div className="flex items-center justify-between w-full">
+        {/* Close button */}
         <button
-          onClick={handlePrev}
-          className="p-3 rounded-full bg-[var(--muted)] hover:bg-[var(--color-yellow)] hover:text-white transition-colors"
+          onClick={onClose}
+          className="absolute -top-14 right-0 w-12 h-12 rounded-full bg-[var(--white)] border-2 border-[var(--black)] flex items-center justify-center text-[var(--gray-700)] hover:text-[var(--brand-blue)] hover:bg-[var(--gray-100)] transition-colors z-10 shadow-sm"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <X className="w-6 h-6" />
         </button>
-        <div className="text-lg font-semibold text-[var(--foreground)]">
-          {currentIndex + 1} / {flashcards.length}
+
+        {/* Counter Badge */}
+        <div className="absolute -top-14 left-0 bg-[var(--brand-yellow)] border-2 border-[var(--black)] px-4 py-2.5 rounded-full shadow-solid z-10">
+          <span className="font-heading text-sm font-extrabold tracking-widest text-[var(--black)]">
+            {currentIndex + 1} / {flashcards.length}
+          </span>
         </div>
-        <button
-          onClick={handleNext}
-          className="p-3 rounded-full bg-[var(--muted)] hover:bg-[var(--color-yellow)] hover:text-white transition-colors"
-        >
-          <ChevronRight className="w-6 h-6" />
-        </button>
-      </div>
 
-      {/* Export Action */}
-      <button
-        onClick={handleExport}
-        className="flex items-center gap-2 px-6 py-3 bg-[var(--color-red-orange)] text-white font-bold rounded-lg hover:bg-[var(--color-orange)] transition-colors shadow-md"
-      >
-        <Share className="w-5 h-5" />
-        Export to Google Forms
-      </button>
-    </div>
+        {/* 3D Flip Card */}
+        <div
+          className="relative w-full aspect-[4/3] cursor-pointer [perspective:1000px]"
+          onClick={() => setIsFlipped(!isFlipped)}
+        >
+          <motion.div
+            className="w-full h-full relative [transform-style:preserve-3d]"
+            animate={{ rotateY: isFlipped ? 180 : 0 }}
+            transition={{
+              duration: 0.6,
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+            }}
+          >
+            {/* Front */}
+            <div className="absolute inset-0 w-full h-full rounded-[40px] bg-[var(--white)] border-[6px] border-[var(--brand-blue)] shadow-solid p-8 md:p-12 flex flex-col items-center justify-center text-center [backface-visibility:hidden]">
+              <div className="absolute top-6 left-6 w-8 h-8 rounded-full bg-[var(--brand-light-blue)]/20 border-2 border-[var(--brand-light-blue)]"></div>
+              <h3 className="text-2xl md:text-3xl font-extrabold text-[var(--brand-blue)] font-heading leading-tight px-4">
+                {currentCard.front}
+              </h3>
+              <div className="absolute bottom-6 flex items-center gap-2 text-sm font-bold text-[var(--gray-400)] uppercase tracking-widest">
+                <span>Tap to flip</span>
+              </div>
+            </div>
+
+            {/* Back */}
+            <div
+              className="absolute inset-0 w-full h-full rounded-[40px] bg-[var(--brand-blue)] border-[6px] border-[var(--black)] shadow-solid p-8 md:p-12 flex flex-col items-center justify-center text-center"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
+              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-[var(--white)]/20 border-2 border-[var(--white)]"></div>
+              <p className="text-xl md:text-2xl font-medium text-[var(--white)] leading-relaxed font-body">
+                {currentCard.back}
+              </p>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between mt-8">
+          <button
+            onClick={handlePrev}
+            className="w-14 h-14 rounded-full bg-[var(--white)] border-2 border-[var(--black)] flex items-center justify-center hover:bg-[var(--gray-100)] active:scale-95 transition-all text-[var(--gray-900)] shadow-solid"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-6 py-4 bg-[var(--white)] border-2 border-[var(--black)] text-[var(--gray-900)] text-sm font-bold rounded-full hover:bg-[var(--gray-100)] active:scale-95 transition-all shadow-solid uppercase tracking-wider"
+          >
+            <Share className="w-5 h-5" />
+            Export to Google Forms
+          </button>
+
+          <button
+            onClick={handleNext}
+            className="w-14 h-14 rounded-full bg-[var(--white)] border-2 border-[var(--black)] flex items-center justify-center hover:bg-[var(--gray-100)] active:scale-95 transition-all text-[var(--gray-900)] shadow-solid"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

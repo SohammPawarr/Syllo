@@ -1,12 +1,25 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db/mongoose';
-import { Document } from '@/lib/db/models';
+import { Document, User } from '@/lib/db/models';
 import path from 'path';
 import fs from 'fs/promises';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(req: Request) {
   try {
     await dbConnect();
+    
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     const { fileId, fileName, accessToken } = await req.json();
 
     if (!fileId || !accessToken) {
@@ -46,6 +59,7 @@ export async function POST(req: Request) {
 
     // Create the document in MongoDB tracking
     const doc = await Document.create({
+      userId: user._id,
       title: fileName,
       fileUrl: localFilePath, // Save absolute path for celery
       processingStatus: 'PENDING',
