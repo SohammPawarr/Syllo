@@ -75,7 +75,7 @@ export default function DashboardPage() {
       )
     );
     setActiveJobId(null);
-    
+
     // Optionally refetch documents to get the exact name from the DB
     fetch("/api/documents")
       .then((res) => res.json())
@@ -100,8 +100,8 @@ export default function DashboardPage() {
   const renderLeftPanel = () => (
     <div className="flex flex-col h-full bg-[var(--gray-50)]">
       <div className="p-4 md:p-6 border-b border-[var(--gray-200)] bg-[var(--white)]">
-        <h2 className="font-heading text-xs font-extrabold tracking-[0.1em] text-[var(--gray-500)] uppercase mb-3 flex items-center gap-2">
-          <BookOpen className="w-4 h-4" />
+        <h2 className="font-heading text-base font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase mb-3 flex items-center justify-center gap-2">
+          <BookOpen className="w-5 h-5" />
           Library
         </h2>
         <FileUpload
@@ -123,24 +123,21 @@ export default function DashboardPage() {
             <button
               key={doc.id}
               onClick={() => handleSelectDocument(doc.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-left transition-all font-medium text-sm group ${
-                doc.id === activeDocId
-                  ? "bg-[var(--brand-blue)] text-[var(--white)] shadow-soft"
-                  : "bg-[var(--white)] text-[var(--gray-700)] hover:shadow-sm border border-[var(--border-color)]"
-              }`}
+              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left transition-all font-bold text-sm border-2 border-[var(--brand-blue)] group ${doc.id === activeDocId
+                  ? "bg-[var(--brand-light-blue)] text-[var(--white)] shadow-solid -translate-y-[2px] -translate-x-[2px]"
+                  : "bg-[var(--white)] text-[var(--brand-blue)] hover:bg-[var(--gray-50)] hover:shadow-solid hover:-translate-y-[2px] hover:-translate-x-[2px]"
+                }`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                doc.id === activeDocId ? "bg-[var(--white)]/20" : "bg-[var(--brand-light-blue)]/10 text-[var(--brand-blue)]"
-              }`}>
-                <FileText className="w-4 h-4" />
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border-2 border-[var(--brand-blue)] ${doc.id === activeDocId ? "bg-[var(--brand-yellow)] text-[var(--brand-blue)]" : "bg-[var(--brand-light-blue)]/20 text-[var(--brand-blue)]"
+                }`}>
+                <FileText className="w-3.5 h-3.5" />
               </div>
               <span className="truncate flex-1">
                 {doc.name}
               </span>
               {doc.status === "processing" && (
-                <span className={`w-2 h-2 rounded-full animate-pulse shrink-0 ${
-                  doc.id === activeDocId ? "bg-[var(--brand-yellow)]" : "bg-[var(--brand-light-blue)]"
-                }`} />
+                <span className={`w-2 h-2 rounded-full animate-pulse shrink-0 border border-[var(--black)] ${doc.id === activeDocId ? "bg-[var(--brand-blue)]" : "bg-[var(--brand-yellow)]"
+                  }`} />
               )}
             </button>
           ))
@@ -179,31 +176,20 @@ export default function DashboardPage() {
         {!activeDocId ? (
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 animate-slide-up">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", bounce: 0.5 }}
               className="w-24 h-24 rounded-[32px] bg-[var(--white)] border-4 border-[var(--brand-blue)] shadow-solid flex items-center justify-center mb-6 relative"
             >
-              <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-[var(--brand-yellow)] border-2 border-[var(--black)] flex items-center justify-center rotate-12">
-                <span className="text-xs font-bold">✨</span>
-              </div>
               <Plus className="w-10 h-10 text-[var(--brand-blue)]" />
             </motion.div>
             <h2 className="font-heading text-2xl font-extrabold tracking-wide text-[var(--brand-blue)] mb-3 drop-shadow-sm">
               NEW STUDY SESSION
             </h2>
             <p className="text-sm font-medium text-[var(--gray-600)] max-w-sm mb-8">
-              Upload a PDF to start analyzing, generating quizzes, and building flashcards.
+              Upload a PDF from the Library panel to start analyzing, generating quizzes, and building flashcards.
             </p>
-
-            {/* Main large upload area */}
-            <div className="w-full max-w-md bg-[var(--white)] p-2 rounded-3xl border-2 border-[var(--border-color)] shadow-soft">
-              <FileUpload
-                onUploadComplete={handleUploadComplete}
-                onJobStarted={handleJobStarted}
-              />
-            </div>
           </div>
         ) : !isDocReady ? (
           /* Processing state */
@@ -246,11 +232,7 @@ export default function DashboardPage() {
       <aside className="hidden lg:block w-[300px] min-w-[300px] bg-[var(--gray-50)] h-full overflow-hidden">
         {activeDocId && isDocReady ? (
           <div className="h-full overflow-y-auto">
-            <ToolsPanel
-              documentId={activeDocId}
-              messages={messages}
-              setMessages={setMessages}
-            />
+            <ToolsPanel />
           </div>
         ) : (
           <div className="h-full flex items-center justify-center p-6 text-center">
@@ -263,11 +245,7 @@ export default function DashboardPage() {
       {rightPortal && createPortal(
         activeDocId && isDocReady ? (
           <div className="h-full overflow-y-auto">
-            <ToolsPanel
-              documentId={activeDocId}
-              messages={messages}
-              setMessages={setMessages}
-            />
+            <ToolsPanel />
           </div>
         ) : (
           <div className="h-full flex items-center justify-center p-6 text-center">

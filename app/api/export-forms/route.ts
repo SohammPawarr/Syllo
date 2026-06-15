@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function POST(req: Request) {
   try {
-    const { generatedQuiz, accessToken } = await req.json();
+    const { title, questions } = await req.json();
 
-    if (!generatedQuiz || !accessToken) {
+    if (!title || !questions) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    const session = await getServerSession(authOptions);
+    // @ts-ignore
+    const accessToken = session?.accessToken;
+
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const oauth2Client = new google.auth.OAuth2();
@@ -15,7 +25,7 @@ export async function POST(req: Request) {
 
     // Step 1: Create an empty form
     const createRes = await forms.forms.create({
-      requestBody: { info: { title: generatedQuiz.quiz_title || 'Generated Quiz' } }
+      requestBody: { info: { title: title || 'Generated Quiz' } }
     });
     
     const formId = createRes.data.formId;
@@ -25,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     // Step 2: Build the batch update request
-    const requests = generatedQuiz.questions.map((q: any, index: number) => ({
+    const requests = questions.map((q: any, index: number) => ({
       createItem: {
         item: {
           title: q.question,
@@ -49,7 +59,10 @@ export async function POST(req: Request) {
       requestBody: { requests }
     });
 
-    return NextResponse.json({ formUrl: createRes.data.responderUri }, { status: 200 });
+    return NextResponse.json({ 
+      formUrl: createRes.data.responderUri,
+      editUrl: `https://docs.google.com/forms/d/${formId}/edit` 
+    }, { status: 200 });
 
   } catch (error: any) {
     console.error("Form export error:", error);

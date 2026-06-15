@@ -10,12 +10,14 @@ interface CreditsContextType {
   credits: number | null;
   refreshCredits: () => void;
 }
-const CreditsContext = createContext<CreditsContextType>({ credits: null, refreshCredits: () => {} });
+const CreditsContext = createContext<CreditsContextType>({ credits: null, refreshCredits: () => { } });
 export const useCredits = () => useContext(CreditsContext);
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
   const [credits, setCredits] = useState<number | null>(null);
+  const [renewsInHrs, setRenewsInHrs] = useState<number | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
 
@@ -23,7 +25,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     fetch("/api/user/credits")
       .then((res) => res.json())
       .then((data) => {
-        if (data.credits !== undefined) setCredits(data.credits);
+        if (data.credits !== undefined) {
+          setCredits(data.credits);
+          setRenewsInHrs(data.renewsInHrs);
+        }
       })
       .catch(console.error);
   }, []);
@@ -48,13 +53,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     <CreditsContext.Provider value={{ credits, refreshCredits }}>
       {/* Edge-to-edge container */}
       <div className="h-screen w-full flex flex-col bg-[var(--white)] overflow-hidden">
-        
+
         {/* ═══ HEADER BAR ═══ */}
         <div className="w-full bg-[var(--white)] border-b border-[var(--gray-200)] pb-2 px-2 md:px-4 pt-2 shadow-sm z-50">
           <header className="h-14 md:h-16 flex items-center justify-between px-4 md:px-6 rounded-full bg-[var(--white)] border-2 border-[var(--black)] shadow-sm max-w-[1920px] mx-auto w-full">
-            
+
             {/* Left: Hamburger (mobile) + Logo */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => setLeftOpen(!leftOpen)}
                 className="lg:hidden p-1.5 rounded-full hover:bg-[var(--gray-100)] transition-colors text-[var(--black)]"
@@ -62,7 +67,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand-yellow)] border-2 border-[var(--black)] flex items-center justify-center shadow-solid overflow-hidden shrink-0">
                   <span className="text-lg">🤖</span>
                 </div>
@@ -75,9 +80,29 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             {/* Right: Credits, User, Tools toggle */}
             <div className="flex items-center gap-3">
               {credits !== null && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold text-[var(--brand-blue)] shadow-sm">
-                  <Zap className="w-3.5 h-3.5 fill-[var(--brand-yellow)] text-[var(--brand-blue)]" />
-                  <span className="hidden sm:inline">{credits.toLocaleString()} pts</span>
+                <div className="relative flex items-center">
+                  <div 
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold text-[var(--brand-blue)] shadow-sm cursor-help group"
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    onClick={() => setShowTooltip(!showTooltip)}
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-[var(--brand-yellow)] text-[var(--brand-blue)] shrink-0" />
+                    <span className="whitespace-nowrap">{credits.toLocaleString()} pts</span>
+                  </div>
+                  
+                  {/* Tooltip */}
+                  {showTooltip && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--white)] border border-[var(--gray-200)] shadow-lg rounded-xl p-3 z-[100] animate-fade-in text-center">
+                      <div className="text-xs font-bold text-[var(--gray-800)] mb-1">
+                        10,000 pts per day
+                      </div>
+                      <div className="text-xs font-medium text-[var(--gray-500)]">
+                        Renews in {renewsInHrs ?? 24} hrs
+                      </div>
+                      <div className="absolute -top-1.5 right-6 w-3 h-3 bg-[var(--white)] border-l border-t border-[var(--gray-200)] transform rotate-45"></div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -123,41 +148,35 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* ═══ MOBILE OVERLAY DRAWERS ═══ */}
         {/* Backdrop */}
-        {(leftOpen || rightOpen) && (
-          <div
-            className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-            onClick={() => {
-              setLeftOpen(false);
-              setRightOpen(false);
-            }}
-          />
-        )}
+        <div
+          className={`lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-300 ${leftOpen || rightOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+          onClick={() => {
+            setLeftOpen(false);
+            setRightOpen(false);
+          }}
+        />
 
         {/* Left drawer (documents) */}
-        {leftOpen && (
-          <div className="lg:hidden fixed inset-y-0 left-0 w-72 z-[60] bg-[var(--white)] animate-slide-in-left border-r-4 border-[var(--black)] shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
-              <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">DOCUMENTS</span>
-              <button onClick={() => setLeftOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div id="mobile-left-panel" className="overflow-y-auto flex-1 pb-6" />
+        <div className={`lg:hidden fixed inset-y-0 left-0 w-72 z-[60] bg-[var(--white)] border-r-4 border-[var(--black)] shadow-2xl flex flex-col transition-transform duration-300 ${leftOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
+            <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">DOCUMENTS</span>
+            <button onClick={() => setLeftOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
+          <div id="mobile-left-panel" className="overflow-y-auto flex-1 pb-6" />
+        </div>
 
         {/* Right drawer (tools) */}
-        {rightOpen && (
-          <div className="lg:hidden fixed inset-y-0 right-0 w-72 z-[60] bg-[var(--white)] animate-slide-in-right border-l-4 border-[var(--black)] shadow-2xl flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
-              <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">STUDY TOOLS</span>
-              <button onClick={() => setRightOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div id="mobile-right-panel" className="overflow-y-auto flex-1 pb-6" />
+        <div className={`lg:hidden fixed inset-y-0 right-0 w-72 z-[60] bg-[var(--white)] border-l-4 border-[var(--black)] shadow-2xl flex flex-col transition-transform duration-300 ${rightOpen ? "translate-x-0" : "translate-x-full"}`}>
+          <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
+            <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">STUDY TOOLS</span>
+            <button onClick={() => setRightOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
+          <div id="mobile-right-panel" className="overflow-y-auto flex-1 pb-6" />
+        </div>
       </div>
     </CreditsContext.Provider>
   );

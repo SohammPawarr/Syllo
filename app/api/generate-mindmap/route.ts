@@ -5,15 +5,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const IMAGE_COST = 1000;
+const MINDMAP_COST = 250;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { documentId, topic } = body;
 
-    if (!documentId || !topic) {
-      return NextResponse.json({ error: 'Missing documentId or topic' }, { status: 400 });
+    if (!documentId) {
+      return NextResponse.json({ error: 'Missing documentId' }, { status: 400 });
     }
 
     const session = await getServerSession(authOptions);
@@ -22,31 +22,31 @@ export async function POST(req: Request) {
     }
 
     try {
-      await deductCredits(session.user.email, IMAGE_COST);
+      await deductCredits(session.user.email, MINDMAP_COST);
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 402 });
     }
 
-    const response = await fetch(`${AI_BACKEND_URL}/v1/generate-image`, {
+    const response = await fetch(`${AI_BACKEND_URL}/v1/generate-mindmap`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         document_id: documentId,
-        topic: topic,
+        topic: topic || "general overview",
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'Failed to generate image URL');
+      throw new Error(errorData.detail || 'Failed to generate mind map');
     }
 
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error: any) {
-    console.error('Generate image error:', error);
+    console.error('Generate mind map error:', error);
     return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }

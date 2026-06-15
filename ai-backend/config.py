@@ -34,6 +34,7 @@ class Settings:
     CORS_ORIGINS: list[str] = os.getenv(
         "CORS_ORIGINS", "http://localhost:3000"
     ).split(",")
+    NEXT_PUBLIC_AI_BACKEND_URL: str = os.getenv("NEXT_PUBLIC_AI_BACKEND_URL", "http://localhost:7860")
 
 
 settings = Settings()

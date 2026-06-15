@@ -46,8 +46,19 @@ const QuizSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const MessageSchema = new mongoose.Schema({
+  documentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Document', required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  role: { type: String, enum: ['user', 'model', 'system'], required: true },
+  content: { type: String, default: '' },
+  type: String, // 'flashcard-trigger', 'form-link', 'image', etc.
+  meta: mongoose.Schema.Types.Mixed, // Raw data for widgets
+  createdAt: { type: Date, default: Date.now }
+});
+
 // Avoid OverwriteModelError in Next.js development
 export const User = mongoose.models.User || mongoose.model('User', UserSchema);
 export const Document = mongoose.models.Document || mongoose.model('Document', DocumentSchema);
 export const DocumentChunk = mongoose.models.DocumentChunk || mongoose.model('DocumentChunk', DocumentChunkSchema);
 export const Quiz = mongoose.models.Quiz || mongoose.model('Quiz', QuizSchema);
+export const Message = mongoose.models.Message || mongoose.model('Message', MessageSchema);

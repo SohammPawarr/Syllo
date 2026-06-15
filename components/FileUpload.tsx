@@ -172,13 +172,15 @@ export default function FileUpload({
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
         className={`
-          border-2 border-dashed rounded-2xl ${compact ? "p-4" : "p-8"} text-center cursor-pointer transition-all duration-200 shadow-sm
+          border-2 rounded-2xl ${compact ? "p-4 border-solid" : "p-8 border-dashed"} text-center cursor-pointer transition-all duration-200 shadow-sm
           ${
             isDragging
               ? "border-[var(--brand-blue)] bg-[var(--brand-blue)]/5 scale-[1.02]"
               : file
                 ? "border-[var(--brand-light-blue)] bg-[var(--gray-50)]"
-                : "border-[var(--gray-300)] hover:border-[var(--brand-light-blue)] bg-[var(--white)]"
+                : compact
+                  ? "border-[var(--brand-blue)] bg-[var(--brand-yellow)] hover:bg-[#EAB308] shadow-solid hover:translate-y-[-2px]"
+                  : "border-[var(--gray-300)] hover:border-[var(--brand-light-blue)] bg-[var(--white)]"
           }
         `}
       >
@@ -213,14 +215,14 @@ export default function FileUpload({
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-[var(--brand-light-blue)]/10 flex items-center justify-center">
-              <Upload className="w-6 h-6 text-[var(--brand-light-blue)]" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${compact ? "bg-[var(--white)] border-2 border-[var(--brand-blue)] shadow-sm" : "bg-[var(--brand-light-blue)]/10"}`}>
+              <Upload className={`w-6 h-6 ${compact ? "text-[var(--brand-blue)]" : "text-[var(--brand-light-blue)]"}`} />
             </div>
             <div>
-              <p className="text-sm font-bold text-[var(--gray-700)]">
+              <p className={`text-sm font-bold ${compact ? "text-[var(--brand-blue)]" : "text-[var(--gray-700)]"}`}>
                 Drop PDF or Browse
               </p>
-              <p className="text-[10px] font-bold text-[var(--gray-400)] uppercase tracking-wider mt-1">
+              <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${compact ? "text-[var(--brand-blue)]/70" : "text-[var(--gray-400)]"}`}>
                 Max 10MB
               </p>
             </div>
@@ -228,19 +230,33 @@ export default function FileUpload({
         )}
       </div>
 
-      {/* Google Drive import */}
-      {!file && !compact && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            handleOpenPicker();
-          }}
-          disabled={isUploading}
-          className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[var(--gray-200)] text-[var(--gray-600)] text-sm font-bold rounded-xl hover:border-[var(--brand-light-blue)] hover:text-[var(--brand-blue)] hover:bg-[var(--gray-50)] transition-all"
-        >
-          <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" className="w-4 h-4 opacity-70" alt="Drive" />
-          Import from Google Drive
-        </button>
+      {/* Google Drive & Classroom import (Sidebar Only) */}
+      {!file && compact && (
+        <div className="flex flex-col gap-3 mt-4">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              handleOpenPicker();
+            }}
+            disabled={isUploading}
+            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[var(--brand-blue)] text-[var(--brand-blue)] text-sm font-bold rounded-xl hover:bg-[var(--brand-blue)] hover:text-[var(--white)] transition-all shadow-sm"
+          >
+            <img src="https://upload.wikimedia.org/wikipedia/commons/d/da/Google_Drive_logo.png" className="w-5 h-5 opacity-90" alt="Drive" />
+            Drive
+          </button>
+          
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              handleOpenPicker();
+            }}
+            disabled={isUploading}
+            className="w-full flex items-center justify-center gap-2 py-3 border-2 border-[var(--brand-blue)] text-[var(--brand-blue)] text-sm font-bold rounded-xl hover:bg-[var(--brand-blue)] hover:text-[var(--white)] transition-all shadow-sm"
+          >
+            <img src="https://www.gstatic.com/images/branding/product/1x/classroom_32dp.png" className="w-5 h-5 opacity-90" alt="Classroom" />
+            Classroom
+          </button>
+        </div>
       )}
 
       {/* Error */}

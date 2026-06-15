@@ -12,6 +12,8 @@ Endpoints:
 from fastapi import FastAPI, HTTPException
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+# pyrefly: ignore [missing-import]
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from config import settings
 
@@ -28,6 +30,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount outputs directory for static file serving
+import os
+os.makedirs("outputs", exist_ok=True)
+app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
 
 
 # ---------------------------------------------------------------------------
@@ -80,16 +87,6 @@ class ChatResponse(BaseModel):
     reply: str
 
 
-class GenerateImageRequest(BaseModel):
-    document_id: str
-    topic: str
-
-
-class GenerateImageResponse(BaseModel):
-    status: str
-    image_url: str
-
-
 class GenerateFlashcardsRequest(BaseModel):
     document_id: str
     topic: str
@@ -102,7 +99,47 @@ class GenerateFlashcardsResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Endpoints
+# Models for Summary Generation
+# ---------------------------------------------------------------------------
+class GenerateSummaryRequest(BaseModel):
+    document_id: str
+    topic: str
+    length: str = "medium"
+
+
+class GenerateSummaryResponse(BaseModel):
+    status: str
+    summary: str
+
+
+# ---------------------------------------------------------------------------
+# Models for Voice and Report Generation
+# ---------------------------------------------------------------------------
+class GenerateVoiceRequest(BaseModel):
+    document_id: str
+    topic: str
+    language: str = "English"
+
+
+class GenerateVoiceResponse(BaseModel):
+    status: str
+    audio_url: str
+
+
+class GenerateReportRequest(BaseModel):
+    document_id: str
+    topic: str
+    format_type: str = "Briefing Doc"
+
+
+class GenerateReportResponse(BaseModel):
+    status: str
+    pdf_url: str
+    format_type: str
+
+
+# ---------------------------------------------------------------------------
+# API Endpoints
 # ---------------------------------------------------------------------------
 
 
@@ -261,29 +298,127 @@ async def chat_route(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/v1/generate-image", response_model=GenerateImageResponse)
-async def generate_image_route(request: GenerateImageRequest):
+@app.post("/v1/generate-summary", response_model=GenerateSummaryResponse)
+async def generate_summary_route(request: GenerateSummaryRequest):
     """
-    Generate an image URL based on document topic.
+    Generate a summary based on document topic.
     """
     from services.rag_service import retrieve_relevant_chunks
-    from services.image_service import generate_image_url
+    from services.summary_service import generate_summary
 
     try:
         # Step 1: RAG retrieval
         context = retrieve_relevant_chunks(
             document_id=request.document_id,
             query=request.topic,
+            top_k=15, # more chunks for better summary
+        )
+
+        # Step 2: Groq summary generation
+        summary = generate_summary(
+            context=context,
+            topic=request.topic,
+            length=request.length,
+        )
+
+        return GenerateSummaryResponse(status="success", summary=summary)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+
+
+@app.post("/v1/generate-voice", response_model=GenerateVoiceResponse)
+async def generate_voice_route(request: GenerateVoiceRequest):
+    """
+    Generate a voice summary using edge-tts.
+    """
+    from services.rag_service import retrieve_relevant_chunks
+    from services.voice_service import generate_voice_summary
+
+    try:
+        context = retrieve_relevant_chunks(
+            document_id=request.document_id,
+            query=request.topic,
             top_k=10,
         )
 
-        # Step 2: Gemini prompt generation + Pollinations URL
-        image_url = generate_image_url(
+        audio_url = await generate_voice_summary(
+            context=context,
+            topic=request.topic,
+            language=request.language,
+        )
+
+        return GenerateVoiceResponse(status="success", audio_url=audio_url)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/generate-report", response_model=GenerateReportResponse)
+async def generate_report_route(request: GenerateReportRequest):
+    """
+    Generate a formatted PDF report using fpdf2.
+    """
+    from services.rag_service import retrieve_relevant_chunks
+    from services.report_service import generate_pdf_report
+
+    try:
+        context = retrieve_relevant_chunks(
+            document_id=request.document_id,
+            query=request.topic,
+            top_k=15,
+        )
+
+        pdf_url = generate_pdf_report(
+            context=context,
+            topic=request.topic,
+            format_type=request.format_type,
+        )
+
+        return GenerateReportResponse(status="success", pdf_url=pdf_url, format_type=request.format_type)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class GenerateMindMapRequest(BaseModel):
+    document_id: str
+    topic: str
+
+class GenerateMindMapResponse(BaseModel):
+    status: str
+    mindmap: dict
+
+@app.post("/v1/generate-mindmap", response_model=GenerateMindMapResponse)
+async def generate_mindmap_route(request: GenerateMindMapRequest):
+    """
+    Generate a mind map JSON from the document.
+    """
+    from services.rag_service import retrieve_relevant_chunks
+    from services.mindmap_service import generate_mindmap_data
+
+    try:
+        context = retrieve_relevant_chunks(
+            document_id=request.document_id,
+            query=request.topic,
+            top_k=10,
+        )
+
+        data = generate_mindmap_data(
             context=context,
             topic=request.topic,
         )
 
-        return GenerateImageResponse(status="success", image_url=image_url)
+        return GenerateMindMapResponse(status="success", mindmap=data)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
