@@ -41,4 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 #temp-uploads
-ai-backend/temp_uploads
+ai-backend/temp_uploads/
+ai-backend/outputs/
+ai-backend/**/__pycache__/
+ai-backend/__pycache__/
