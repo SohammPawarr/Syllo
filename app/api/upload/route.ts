@@ -35,15 +35,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: e.message }, { status: 402 });
     }
 
-    // Save to local temp folder for backend to access
-    const uploadDir = path.join(process.cwd(), 'ai-backend', 'temp_uploads');
-    await fs.mkdir(uploadDir, { recursive: true });
+    // Forward the file directly to the Render backend over HTTP
+    const backendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860';
+    const uploadUrl = `${backendUrl.replace(/\/$/, '')}/v1/upload`;
     
-    const filePath = path.join(uploadDir, file.name);
-    const arrayBuffer = await file.arrayBuffer();
-    await fs.writeFile(filePath, Buffer.from(arrayBuffer));
+    const backendFormData = new FormData();
+    backendFormData.append('file', file);
 
-    const fileUri = filePath; // Pass absolute local path to celery
+    const backendRes = await fetch(uploadUrl, {
+      method: 'POST',
+      body: backendFormData,
+    });
+
+    if (!backendRes.ok) {
+      const errData = await backendRes.json().catch(() => ({}));
+      throw new Error(errData.detail || "Backend upload failed");
+    }
+
+    const backendData = await backendRes.json();
+    const fileUri = backendData.file_path; // The absolute path on the Render server
 
     const user = await User.findOne({ email: session.user.email });
     if (!user) {

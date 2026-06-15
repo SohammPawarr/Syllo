@@ -9,13 +9,16 @@ Endpoints:
 """
 
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, BackgroundTasks, UploadFile, File
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 # pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from config import settings
+import shutil
+import uuid
+import os
 
 app = FastAPI(
     title="Syllo AI Engine",
@@ -32,9 +35,12 @@ app.add_middleware(
 )
 
 # Mount outputs directory for static file serving
-import os
 os.makedirs("outputs", exist_ok=True)
 app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
+
+# Ensure temp uploads directory exists
+TEMP_DIR = os.path.join(os.getcwd(), 'temp_uploads')
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -57,6 +63,11 @@ class GenerateRequest(BaseModel):
 class ProcessResponse(BaseModel):
     status: str
     task_id: str
+
+
+class UploadResponse(BaseModel):
+    status: str
+    file_path: str
 
 
 class GenerateResponse(BaseModel):
@@ -146,6 +157,25 @@ class GenerateReportResponse(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "syllo-ai-engine"}
+
+
+@app.post("/v1/upload", response_model=UploadResponse)
+async def upload_file(file: UploadFile = File(...)):
+    """Receive a file uploaded from Vercel and save it to Render's disk."""
+    try:
+        # Generate unique filename to avoid collisions
+        ext = os.path.splitext(file.filename)[1] if file.filename else ""
+        unique_filename = f"{uuid.uuid4()}{ext}"
+        file_path = os.path.join(TEMP_DIR, unique_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        return UploadResponse(status="success", file_path=file_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        file.file.close()
 
 
 @app.post("/v1/process", response_model=ProcessResponse)
