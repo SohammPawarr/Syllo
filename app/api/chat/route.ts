@@ -5,8 +5,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const CHAT_COST = 100;
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -21,8 +19,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
+    let cost = 20; // default chat cost
+    
+    if (lastMessage.includes('#voice')) cost = 300;
+    else if (lastMessage.includes('#mindmap')) cost = 250;
+    else if (lastMessage.includes('#report')) cost = 200;
+    else if (lastMessage.includes('#quiz')) cost = 150;
+    else if (lastMessage.includes('#flashcards')) cost = 100;
+    else if (lastMessage.includes('#summary')) cost = 50;
+
     try {
-      await deductCredits(session.user.email, CHAT_COST);
+      await deductCredits(session.user.email, cost);
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 402 });
     }

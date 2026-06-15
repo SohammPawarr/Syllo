@@ -9,7 +9,7 @@ Endpoints:
 """
 
 # pyrefly: ignore [missing-import]
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 # pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 # pyrefly: ignore [missing-import]
@@ -149,39 +149,23 @@ async def health_check():
 
 
 @app.post("/v1/process", response_model=ProcessResponse)
-async def process_document(request: ProcessRequest):
-    """Queue a document for the full ingestion pipeline."""
-    from celery_worker import process_document_task
+async def process_document(request: ProcessRequest, background_tasks: BackgroundTasks):
+    """Queue a document for the full ingestion pipeline using FastAPI BackgroundTasks."""
+    from background import process_document_background
 
-    task = process_document_task.delay(request.document_id, request.file_url)
-    return ProcessResponse(status="queued", task_id=task.id)
+    background_tasks.add_task(process_document_background, request.document_id, request.file_url)
+    return ProcessResponse(status="queued", task_id=request.document_id)
 
 
 @app.get("/v1/status/{task_id}", response_model=TaskStatusResponse)
 async def get_task_status(task_id: str):
-    """Poll the status of a Celery task."""
-    from celery_worker import celery_app
-
-    result = celery_app.AsyncResult(task_id)
-
-    phase = None
-    error = None
-    task_result = None
-
-    if result.state == "PROGRESS":
-        meta = result.info or {}
-        phase = meta.get("phase")
-    elif result.state == "SUCCESS":
-        task_result = result.result
-    elif result.state == "FAILURE":
-        error = str(result.info)
-
+    """Fallback status endpoint. Actual status is polled from MongoDB by Next.js."""
     return TaskStatusResponse(
         task_id=task_id,
-        state=result.state,
-        phase=phase,
-        result=task_result,
-        error=error,
+        state="SUCCESS",
+        phase="READY",
+        result=None,
+        error=None,
     )
 
 
