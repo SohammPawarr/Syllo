@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing documentId or fileUrl" }, { status: 400 });
     }
 
-    const fastapiUrl = process.env.FASTAPI_SERVICE_URL || 'http://localhost:7860';
+    const fastapiUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860';
 
     // Trigger Python backend
     const response = await fetch(`${fastapiUrl}/v1/process`, {
