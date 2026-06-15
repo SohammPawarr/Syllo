@@ -36,7 +36,7 @@ export async function POST(req: Request) {
     }
 
     // Forward the file directly to the Render backend over HTTP
-    const backendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860';
+    const backendUrl = (process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860').replace(/\/$/, '');
     const uploadUrl = `${backendUrl.replace(/\/$/, '')}/v1/upload`;
     
     const backendFormData = new FormData();
