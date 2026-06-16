@@ -39,6 +39,10 @@ export default function DashboardPage() {
 
   /* ── Fetch Documents on Mount ── */
   useEffect(() => {
+    // Wake up backend server invisibly
+    const backendUrl = process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860';
+    fetch(`${backendUrl.replace(/\/$/, '')}/health`).catch(() => {});
+
     fetch("/api/documents")
       .then((res) => res.json())
       .then((data) => {

@@ -593,7 +593,7 @@ export default function ChatInterface({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question or select a tool..."
+              placeholder="Type your question (25 credits) or select a tool..."
               className="flex-1 px-4 py-2 bg-transparent text-sm font-medium text-[var(--gray-900)] placeholder:text-[var(--gray-400)] !outline-none !ring-0 !border-transparent"
               disabled={isLoading}
             />

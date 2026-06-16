@@ -25,5 +25,5 @@ numpy>=1.26.0
 
 # Groq AI
 groq==1.4.0
-edge-tts==6.1.9
+gTTS==2.5.1
 fpdf2==2.7.9

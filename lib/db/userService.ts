@@ -47,12 +47,11 @@ export async function getOrCreateUserWithCredits(email: string) {
 export async function deductCredits(email: string, amount: number) {
   const user = await getOrCreateUserWithCredits(email);
   
-  // TOKEN LIMIT REMOVED TEMPORARILY:
-  // if (user.credits < amount) {
-  //   throw new Error(`Insufficient credits. You need ${amount} credits but only have ${user.credits}.`);
-  // }
+  if (user.credits < amount) {
+    throw new Error(`Insufficient credits. You need ${amount} credits but only have ${user.credits}.`);
+  }
   
-  // user.credits -= amount;
-  // await user.save();
+  user.credits -= amount;
+  await user.save();
   return user.credits;
 }

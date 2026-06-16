@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
-    let cost = 20; // default chat cost
+    let cost = 25; // default chat cost
     
     if (lastMessage.includes('#voice')) cost = 300;
     else if (lastMessage.includes('#mindmap')) cost = 250;

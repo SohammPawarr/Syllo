@@ -1,14 +1,15 @@
 import os
 import uuid
+import asyncio
 from config import settings
 from .groq_client import get_groq_client
 
 async def generate_voice_summary(context: str, topic: str, language: str) -> str:
     """
-    Generates a voice summary by creating a script with Groq and converting to audio with edge-tts.
+    Generates a voice summary by creating a script with Groq and converting to audio with gTTS.
     Returns the public URL of the generated audio.
     """
-    import edge_tts
+    from gtts import gTTS
     
     # 1. Generate the script using Groq
     lang_instruction = "Hindi" if language == "Hindi" else "English"
@@ -31,13 +32,17 @@ Document Context:
     )
     script_text = response.choices[0].message.content.strip()
 
-    # 2. Convert text to speech using edge-tts
-    voice = "hi-IN-MadhurNeural" if language == "Hindi" else "en-US-ChristopherNeural"
+    # 2. Convert text to speech using gTTS
+    lang_code = "hi" if language == "Hindi" else "en"
     filename = f"audio_{uuid.uuid4().hex}.mp3"
     filepath = os.path.join("outputs", filename)
 
-    communicate = edge_tts.Communicate(script_text, voice)
-    await communicate.save(filepath)
+    # gTTS is blocking, so run it in a thread to not block the FastAPI event loop
+    def save_audio():
+        tts = gTTS(text=script_text, lang=lang_code, slow=False)
+        tts.save(filepath)
+
+    await asyncio.to_thread(save_audio)
 
     # Return the URL to access this file via the FastAPI static mount
     return f"{settings.NEXT_PUBLIC_AI_BACKEND_URL}/outputs/{filename}"
