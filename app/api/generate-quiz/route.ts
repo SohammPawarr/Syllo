@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const QUIZ_COST = 500;
+const QUIZ_COST = 300;
 
 export async function POST(req: Request) {
   try {

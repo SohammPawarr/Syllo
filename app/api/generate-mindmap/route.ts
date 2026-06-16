@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const MINDMAP_COST = 250;
+const MINDMAP_COST = 500;
 
 export async function POST(req: Request) {
   try {

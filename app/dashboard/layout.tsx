@@ -82,12 +82,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               {credits !== null && (
                 <div className="relative flex items-center">
                   <div 
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold text-[var(--brand-blue)] shadow-sm cursor-help group"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold shadow-sm cursor-help group ${credits < 1000 ? 'text-red-600' : 'text-[var(--brand-blue)]'}`}
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                     onClick={() => setShowTooltip(!showTooltip)}
                   >
-                    <Zap className="w-3.5 h-3.5 fill-[var(--brand-yellow)] text-[var(--brand-blue)] shrink-0" />
+                    <Zap className={`w-3.5 h-3.5 fill-[var(--brand-yellow)] shrink-0 ${credits < 1000 ? 'text-red-600' : 'text-[var(--brand-blue)]'}`} />
                     <span className="whitespace-nowrap">{credits.toLocaleString()} pts</span>
                   </div>
                   
@@ -105,14 +105,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   )}
                 </div>
               )}
-
-              <button
-                onClick={() => setRightOpen(!rightOpen)}
-                className="lg:hidden p-1.5 rounded-full bg-[var(--white)] border border-[var(--black)]/10 shadow-sm text-[var(--brand-blue)] hover:bg-[var(--gray-50)] transition-colors"
-                aria-label="Toggle tools panel"
-              >
-                <BookOpen className="w-5 h-5" />
-              </button>
 
               {/* User Info (Desktop) */}
               <div className="hidden sm:flex items-center gap-2 ml-2">

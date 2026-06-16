@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, Download, ClipboardList } from "lucide-react";
+import { Send, Loader2, Bot, Download, ClipboardList, Wrench, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCredits } from "@/app/dashboard/layout";
 import { useSession } from "next-auth/react";
 import CustomAudioPlayer from "./CustomAudioPlayer";
 import CustomMindMap from "./CustomMindMap";
+import ToolsPanel from "./GenerateForm";
 
 export interface ChatMessage {
   role: "user" | "model";
@@ -36,6 +37,7 @@ export default function ChatInterface({
   const [summaryLength, setSummaryLength] = useState("medium");
   const [voiceLanguage, setVoiceLanguage] = useState("English");
   const [reportFormat, setReportFormat] = useState("Briefing Doc");
+  const [isToolsOpen, setIsToolsOpen] = useState(false);
   
   const { data: session } = useSession();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -51,6 +53,7 @@ export default function ChatInterface({
       const customEvent = e as CustomEvent;
       const { tag } = customEvent.detail;
       setInput(tag);
+      setIsToolsOpen(false);
       setTimeout(() => inputRef.current?.focus(), 10);
     };
 
@@ -581,34 +584,66 @@ export default function ChatInterface({
             </motion.div>
           )}
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="w-full flex items-center gap-2 p-2 bg-[var(--white)] border-2 border-[var(--gray-200)] rounded-[32px] shadow-sm transition-shadow !outline-none !ring-0"
-          >
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question (25 credits) or select a tool..."
-              className="flex-1 px-4 py-2 bg-transparent text-sm font-medium text-[var(--gray-900)] placeholder:text-[var(--gray-400)] !outline-none !ring-0 !border-transparent"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading || (input.startsWith("#") && input.split(" ").length < 2)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--brand-light-blue)] text-[var(--white)] hover:bg-[var(--brand-blue)] shadow-sm disabled:opacity-40 disabled:hover:bg-[var(--brand-light-blue)] transition-colors cursor-pointer shrink-0"
-            >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4 ml-0.5" />
+          <div className="relative w-full">
+            <AnimatePresence>
+              {isToolsOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute bottom-full left-0 mb-3 w-[calc(100vw-32px)] sm:w-80 bg-[var(--white)] border-2 border-[var(--black)] rounded-3xl shadow-solid overflow-hidden z-50 flex flex-col max-h-[60vh]"
+                >
+                  <div className="flex justify-between items-center p-3 border-b-2 border-[var(--gray-200)] bg-[var(--gray-50)]">
+                    <span className="font-heading font-extrabold text-[var(--brand-blue)] flex items-center gap-2">
+                      <Wrench className="w-5 h-5" /> TOOLS
+                    </span>
+                    <button onClick={() => setIsToolsOpen(false)} className="p-1.5 hover:bg-[var(--gray-200)] rounded-full text-[var(--gray-500)] transition-colors">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <ToolsPanel />
+                  </div>
+                </motion.div>
               )}
-            </button>
-          </form>
+            </AnimatePresence>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend();
+              }}
+              className="w-full flex items-center gap-2 p-2 bg-[var(--white)] border-2 border-[var(--gray-200)] rounded-[32px] shadow-sm transition-shadow !outline-none !ring-0"
+            >
+              <button
+                type="button"
+                onClick={() => setIsToolsOpen(!isToolsOpen)}
+                className="w-10 h-10 lg:hidden flex items-center justify-center rounded-full bg-[var(--gray-100)] text-[var(--brand-blue)] hover:bg-[var(--gray-200)] transition-colors shrink-0"
+              >
+                <Wrench className="w-5 h-5" />
+              </button>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your question (50 credits) or select a tool..."
+                className="flex-1 px-2 py-2 bg-transparent text-sm font-medium text-[var(--gray-900)] placeholder:text-[var(--gray-400)] !outline-none !ring-0 !border-transparent"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading || (input.startsWith("#") && input.split(" ").length < 2)}
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--brand-light-blue)] text-[var(--white)] hover:bg-[var(--brand-blue)] shadow-sm disabled:opacity-40 disabled:hover:bg-[var(--brand-light-blue)] transition-colors cursor-pointer shrink-0"
+              >
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 ml-0.5" />
+                )}
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const REPORT_COST = 500; // Reports are large, set high cost
+const REPORT_COST = 400;
 
 export async function POST(req: Request) {
   try {

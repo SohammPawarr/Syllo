@@ -11,8 +11,8 @@ export default function ToolsPanel() {
   return (
     <div className="flex flex-col h-full bg-[var(--gray-50)]">
       <div className="p-4 md:p-6 border-b border-[var(--gray-200)] bg-[var(--white)]">
-        <h2 className="font-heading text-base font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase mb-3 flex items-center justify-center gap-2">
-          <Wrench className="w-5 h-5" />
+        <h2 className="font-heading text-2xl font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase mb-3 flex items-center justify-center gap-2">
+          <Wrench className="w-7 h-7" />
           Tools
         </h2>
       </div>
@@ -21,7 +21,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<FileText className="w-5 h-5" />}
           label="Quiz Form"
-          cost={150}
+          cost={300}
           onClick={() => insertTag("#quiz ")}
           iconBg="bg-[var(--brand-yellow)]"
           iconText="text-[var(--brand-blue)]"
@@ -29,7 +29,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<Images className="w-5 h-5" />}
           label="Flashcards"
-          cost={100}
+          cost={200}
           onClick={() => insertTag("#flashcards ")}
           iconBg="bg-[var(--brand-light-blue)]"
           iconText="text-[var(--white)]"
@@ -37,7 +37,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<Network className="w-5 h-5" />}
           label="Mind Map"
-          cost={250}
+          cost={500}
           onClick={() => insertTag("#mindmap ")}
           iconBg="bg-[var(--brand-blue)]"
           iconText="text-[var(--white)]"
@@ -45,7 +45,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<FileText className="w-5 h-5" />}
           label="Summary"
-          cost={50}
+          cost={100}
           onClick={() => insertTag("#summary ")}
           iconBg="bg-[var(--gray-700)]"
           iconText="text-[var(--white)]"
@@ -53,7 +53,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<Volume2 className="w-5 h-5" />}
           label="Voice Summary"
-          cost={300}
+          cost={600}
           onClick={() => insertTag("#voice ")}
           iconBg="bg-[var(--brand-yellow)]"
           iconText="text-[var(--brand-blue)]"
@@ -61,7 +61,7 @@ export default function ToolsPanel() {
         <ToolButton
           icon={<PieChart className="w-5 h-5" />}
           label="PDF Report"
-          cost={200}
+          cost={400}
           onClick={() => insertTag("#report ")}
           iconBg="bg-[var(--brand-light-blue)]"
           iconText="text-[var(--white)]"

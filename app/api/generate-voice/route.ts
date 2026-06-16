@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const VOICE_COST = 300; // Let's set it slightly higher
+const VOICE_COST = 600;
 
 export async function POST(req: Request) {
   try {

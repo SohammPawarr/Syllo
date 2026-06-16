@@ -84,6 +84,7 @@ export default function CustomAudioPlayer({ src }: { src: string }) {
       <audio
         ref={audioRef}
         src={src}
+        preload="metadata"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
@@ -125,7 +126,9 @@ export default function CustomAudioPlayer({ src }: { src: string }) {
               type="range"
               min="0"
               max="100"
+              step="0.01"
               value={progress || 0}
+              onInput={handleSeek}
               onChange={handleSeek}
               className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
             />

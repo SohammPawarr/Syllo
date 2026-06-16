@@ -106,7 +106,7 @@ export default function DashboardPage() {
       <div className="p-4 md:p-6 border-b border-[var(--gray-200)] bg-[var(--white)]">
         <h2 className="font-heading text-base font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase mb-3 flex items-center justify-center gap-2">
           <BookOpen className="w-5 h-5" />
-          Library
+          <span className="hidden lg:inline">Library</span>
         </h2>
         <FileUpload
           onUploadComplete={handleUploadComplete}

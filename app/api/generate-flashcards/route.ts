@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const FLASHCARD_COST = 500;
+const FLASHCARD_COST = 200;
 
 export async function POST(req: Request) {
   try {

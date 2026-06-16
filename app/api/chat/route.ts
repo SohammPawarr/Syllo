@@ -20,14 +20,14 @@ export async function POST(req: Request) {
     }
 
     const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || '';
-    let cost = 25; // default chat cost
+    let cost = 50; // default chat cost
     
-    if (lastMessage.includes('#voice')) cost = 300;
-    else if (lastMessage.includes('#mindmap')) cost = 250;
-    else if (lastMessage.includes('#report')) cost = 200;
-    else if (lastMessage.includes('#quiz')) cost = 150;
-    else if (lastMessage.includes('#flashcards')) cost = 100;
-    else if (lastMessage.includes('#summary')) cost = 50;
+    if (lastMessage.includes('#voice')) cost = 600;
+    else if (lastMessage.includes('#mindmap')) cost = 500;
+    else if (lastMessage.includes('#report')) cost = 400;
+    else if (lastMessage.includes('#quiz')) cost = 300;
+    else if (lastMessage.includes('#flashcards')) cost = 200;
+    else if (lastMessage.includes('#summary')) cost = 100;
 
     try {
       await deductCredits(session.user.email, cost);
