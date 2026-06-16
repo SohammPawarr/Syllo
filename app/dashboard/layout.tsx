@@ -67,7 +67,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-[var(--brand-yellow)] border-2 border-[var(--black)] flex items-center justify-center shadow-solid overflow-hidden shrink-0">
                   <span className="text-lg">🤖</span>
                 </div>
@@ -82,19 +82,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               {credits !== null && (
                 <div className="relative flex items-center">
                   <div 
-                    className={`flex items-center gap-1.5 px-3 py-1.5 bg-[var(--white)] border border-[var(--black)]/10 rounded-full text-xs font-bold shadow-sm cursor-help group ${credits < 1000 ? 'text-red-600' : 'text-[var(--brand-blue)]'}`}
+                    className={`flex items-center gap-2 px-4 md:px-5 py-1.5 rounded-full text-sm md:text-base font-extrabold cursor-help transition-all border-2 ${credits < 1000 ? 'text-[var(--white)] border-[var(--black)] bg-red-600 shadow-solid' : 'bg-[var(--brand-yellow)] border-[var(--brand-blue)] text-[var(--brand-blue)] shadow-solid hover:-translate-y-[2px] hover:bg-[#EAB308]'}`}
                     onMouseEnter={() => setShowTooltip(true)}
                     onMouseLeave={() => setShowTooltip(false)}
                     onClick={() => setShowTooltip(!showTooltip)}
                   >
-                    <Zap className={`w-3.5 h-3.5 fill-[var(--brand-yellow)] shrink-0 ${credits < 1000 ? 'text-red-600' : 'text-[var(--brand-blue)]'}`} />
+                    <Zap className={`w-4 h-4 fill-[var(--brand-yellow)] shrink-0 ${credits < 1000 ? 'text-red-600' : 'text-[var(--brand-blue)]'}`} />
                     <span className="whitespace-nowrap">{credits.toLocaleString()} pts</span>
                   </div>
                   
                   {/* Tooltip */}
                   {showTooltip && (
                     <div className="absolute top-full right-0 mt-2 w-48 bg-[var(--white)] border border-[var(--gray-200)] shadow-lg rounded-xl p-3 z-[100] animate-fade-in text-center">
-                      <div className="text-xs font-bold text-[var(--gray-800)] mb-1">
+                      <div className="text-sm font-bold text-[var(--gray-800)] mb-1">
                         10,000 pts per day
                       </div>
                       <div className="text-xs font-medium text-[var(--gray-500)]">
@@ -107,16 +107,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               )}
 
               {/* User Info (Desktop) */}
-              <div className="hidden sm:flex items-center gap-2 ml-2">
-                <span className="text-xs font-bold text-[var(--black)]">{session.user?.name?.split(" ")[0]}</span>
+              <div className="hidden sm:flex items-center gap-3 ml-2">
+                <span className="text-sm md:text-base font-extrabold text-[var(--black)]">{session.user?.name?.split(" ")[0]}</span>
                 {session.user?.image ? (
                   <img
                     src={session.user.image}
                     alt=""
-                    className="w-8 h-8 rounded-full border-2 border-[var(--black)] shadow-sm object-cover bg-[var(--white)]"
+                    className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[var(--black)] shadow-sm object-cover bg-[var(--white)]"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full border-2 border-[var(--black)] bg-[var(--brand-blue)] text-[var(--white)] flex items-center justify-center text-xs font-bold shadow-sm">
+                  <div className="w-9 h-9 md:w-10 md:h-10 rounded-full border-2 border-[var(--black)] bg-[var(--brand-blue)] text-[var(--white)] flex items-center justify-center text-sm font-bold shadow-sm">
                     {session.user?.name?.[0] || "U"}
                   </div>
                 )}
@@ -150,9 +150,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
         {/* Left drawer (documents) */}
         <div className={`lg:hidden fixed inset-y-0 left-0 w-72 z-[60] bg-[var(--white)] border-r-4 border-[var(--black)] shadow-2xl flex flex-col transition-transform duration-300 ${leftOpen ? "translate-x-0" : "-translate-x-full"}`}>
-          <div className="flex items-center justify-between p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
-            <span className="font-heading text-sm font-extrabold tracking-wider text-[var(--brand-blue)]">DOCUMENTS</span>
-            <button onClick={() => setLeftOpen(false)} className="p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
+          <div className="relative flex justify-center items-center p-4 border-b border-[var(--gray-200)] bg-[var(--gray-50)]">
+            <span className="font-heading text-lg font-extrabold tracking-wider text-[var(--brand-blue)]">DOCUMENTS</span>
+            <button onClick={() => setLeftOpen(false)} className="absolute right-4 p-2 rounded-full hover:bg-[var(--gray-200)] text-[var(--gray-600)] transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>

@@ -10,14 +10,14 @@ export default function ToolsPanel() {
 
   return (
     <div className="flex flex-col h-full bg-[var(--gray-50)]">
-      <div className="p-4 md:p-6 border-b border-[var(--gray-200)] bg-[var(--white)]">
-        <h2 className="font-heading text-2xl font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase mb-3 flex items-center justify-center gap-2">
+      <div className="hidden lg:flex p-4 md:p-6 border-b border-[var(--gray-200)] bg-[var(--white)] items-center justify-center">
+        <h2 className="font-heading text-2xl font-extrabold tracking-[0.1em] text-[var(--brand-blue)] uppercase flex items-center justify-center gap-2 mt-1">
           <Wrench className="w-7 h-7" />
           Tools
         </h2>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 lg:p-4 lg:space-y-3">
         <ToolButton
           icon={<FileText className="w-5 h-5" />}
           label="Quiz Form"

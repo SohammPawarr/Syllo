@@ -588,20 +588,21 @@ export default function ChatInterface({
             <AnimatePresence>
               {isToolsOpen && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute bottom-full left-0 mb-3 w-[calc(100vw-32px)] sm:w-80 bg-[var(--white)] border-2 border-[var(--black)] rounded-3xl shadow-solid overflow-hidden z-50 flex flex-col max-h-[60vh]"
+                  initial={{ opacity: 0, y: "100%", scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: "100%", scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className="absolute bottom-full left-0 mb-3 w-[calc(100vw-32px)] sm:w-80 bg-[var(--white)] border-2 border-[var(--black)] rounded-3xl shadow-solid overflow-hidden z-50 flex flex-col origin-bottom"
                 >
-                  <div className="flex justify-between items-center p-3 border-b-2 border-[var(--gray-200)] bg-[var(--gray-50)]">
-                    <span className="font-heading font-extrabold text-[var(--brand-blue)] flex items-center gap-2">
+                  <div className="relative flex justify-center items-center p-3 border-b-2 border-[var(--gray-200)] bg-[var(--gray-50)]">
+                    <div className="flex items-center gap-2 text-[var(--brand-blue)] font-heading font-extrabold tracking-wider text-lg">
                       <Wrench className="w-5 h-5" /> TOOLS
-                    </span>
-                    <button onClick={() => setIsToolsOpen(false)} className="p-1.5 hover:bg-[var(--gray-200)] rounded-full text-[var(--gray-500)] transition-colors">
+                    </div>
+                    <button onClick={() => setIsToolsOpen(false)} className="absolute right-3 p-1.5 hover:bg-[var(--gray-200)] rounded-full text-[var(--gray-500)] transition-colors">
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto custom-scrollbar">
+                  <div className="flex-1">
                     <ToolsPanel />
                   </div>
                 </motion.div>
