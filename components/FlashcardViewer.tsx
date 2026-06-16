@@ -112,7 +112,6 @@ export default function FlashcardModal({ flashcards, onClose }: FlashcardModalPr
           >
             {/* Front */}
             <div className="absolute inset-0 w-full h-full rounded-[40px] bg-[var(--white)] border-[6px] border-[var(--brand-blue)] shadow-solid p-8 md:p-12 flex flex-col items-center justify-center text-center [backface-visibility:hidden]">
-              <div className="absolute top-6 left-6 w-8 h-8 rounded-full bg-[var(--brand-light-blue)]/20 border-2 border-[var(--brand-light-blue)]"></div>
               <h3 className="text-2xl md:text-3xl font-extrabold text-[var(--brand-blue)] font-heading leading-tight px-4">
                 {currentCard.front}
               </h3>
@@ -129,7 +128,6 @@ export default function FlashcardModal({ flashcards, onClose }: FlashcardModalPr
                 transform: "rotateY(180deg)",
               }}
             >
-              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-[var(--white)]/20 border-2 border-[var(--white)]"></div>
               <p className="text-xl md:text-2xl font-medium text-[var(--white)] leading-relaxed font-body">
                 {currentCard.back}
               </p>

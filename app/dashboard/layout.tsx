@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <CreditsContext.Provider value={{ credits, refreshCredits }}>
       {/* Edge-to-edge container */}
-      <div className="h-screen w-full flex flex-col bg-[var(--white)] overflow-hidden">
+      <div className="h-[100dvh] w-full flex flex-col bg-[var(--white)] overflow-hidden">
 
         {/* ═══ HEADER BAR ═══ */}
         <div className="w-full bg-[var(--white)] border-b border-[var(--gray-200)] pb-2 px-2 md:px-4 pt-2 shadow-sm z-50">
