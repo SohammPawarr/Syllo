@@ -2,8 +2,7 @@
 
 import io
 import requests
-# pyrefly: ignore [missing-import]
-from PyPDF2 import PdfReader
+import fitz  # PyMuPDF
 # pyrefly: ignore [missing-import]
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from config import settings
@@ -11,20 +10,21 @@ from config import settings
 
 def extract_text_from_pdf(file_path_or_url: str) -> str:
     """
-    Extract all text from a PDF.
+    Extract all text from a PDF using PyMuPDF (fitz).
     Accepts a local file path or a remote URL.
     """
     if file_path_or_url.startswith(("http://", "https://")):
         response = requests.get(file_path_or_url, timeout=60)
         response.raise_for_status()
-        pdf_bytes = io.BytesIO(response.content)
+        pdf_bytes = response.content
     else:
-        pdf_bytes = open(file_path_or_url, "rb")
+        with open(file_path_or_url, "rb") as f:
+            pdf_bytes = f.read()
 
-    reader = PdfReader(pdf_bytes)
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     pages_text: list[str] = []
-    for page in reader.pages:
-        text = page.extract_text()
+    for page in doc:
+        text = page.get_text()
         if text:
             pages_text.append(text.strip())
 

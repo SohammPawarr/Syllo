@@ -17,7 +17,7 @@ def process_document_background(document_id: str, file_url: str):
         raw_text = extract_text_from_pdf(file_url)
 
         if not raw_text.strip():
-            raise ValueError("PDF produced no extractable text")
+            raise ValueError("The uploaded document appears to be an image or contains no selectable text. Please upload a standard text-based PDF.")
 
         # Step 2: Chunk
         update_document_status(document_id, "CHUNKING")

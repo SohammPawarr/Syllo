@@ -1,5 +1,7 @@
 """Vector embedding generation service."""
 
+
+# pyrefly: ignore [missing-import]
 from fastembed import TextEmbedding
 from config import settings
 
