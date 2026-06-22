@@ -18,15 +18,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    const { fileName, fileUri } = await req.json();
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json({ error: "File exceeds the 10MB size limit." }, { status: 400 });
+    if (!fileName || !fileUri) {
+      return NextResponse.json({ error: "Missing file details" }, { status: 400 });
     }
 
     try {
@@ -34,26 +29,6 @@ export async function POST(req: Request) {
     } catch (e: any) {
       return NextResponse.json({ error: e.message }, { status: 402 });
     }
-
-    // Forward the file directly to the Render backend over HTTP
-    const backendUrl = (process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860').replace(/\/$/, '');
-    const uploadUrl = `${backendUrl.replace(/\/$/, '')}/v1/upload`;
-    
-    const backendFormData = new FormData();
-    backendFormData.append('file', file);
-
-    const backendRes = await fetch(uploadUrl, {
-      method: 'POST',
-      body: backendFormData,
-    });
-
-    if (!backendRes.ok) {
-      const errData = await backendRes.json().catch(() => ({}));
-      throw new Error(errData.detail || "Backend upload failed");
-    }
-
-    const backendData = await backendRes.json();
-    const fileUri = backendData.file_path; // The absolute path on the Render server
 
     const user = await User.findOne({ email: session.user.email });
     if (!user) {
@@ -63,7 +38,7 @@ export async function POST(req: Request) {
     // Create tracking document in MongoDB with a valid ObjectId
     const doc = await Document.create({
       userId: user._id,
-      title: file.name,
+      title: fileName,
       fileUrl: fileUri,
       processingStatus: 'PENDING'
     });

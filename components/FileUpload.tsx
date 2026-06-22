@@ -131,20 +131,43 @@ export default function FileUpload({
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      
+      // Fix for iOS/Safari DOMException "The string did not match the expected pattern":
+      // 1. Sanitize the filename to remove non-ASCII/special characters which break WebKit's internal header serialization.
+      // 2. Wrap the file in a clean Blob with a guaranteed valid MIME type, as iPad converted PDFs sometimes have malformed type strings.
+      const safeName = file.name.replace(/[^a-zA-Z0-9.\-_ ]/g, '_');
+      const cleanBlob = new Blob([file], { type: "application/pdf" });
+      formData.append("file", cleanBlob, safeName);
 
-      const uploadRes = await fetch("/api/upload", {
+      const backendUrl = (process.env.NEXT_PUBLIC_AI_BACKEND_URL || 'http://localhost:7860').replace(/\/$/, '');
+      const uploadUrl = `${backendUrl}/v1/upload`;
+
+      const uploadRes = await fetch(uploadUrl, {
         method: "POST",
         body: formData,
       });
 
-      const resData = await uploadRes.json();
-
       if (!uploadRes.ok) {
-        throw new Error(resData.error || "Upload failed");
+        throw new Error("Direct backend upload failed.");
       }
 
-      const { fileUri, documentId } = resData;
+      const backendData = await uploadRes.json();
+      const fileUri = backendData.file_path;
+
+      // 2. Register document and deduct credits
+      const registerRes = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, fileUri }),
+      });
+
+      const resData = await registerRes.json();
+
+      if (!registerRes.ok) {
+        throw new Error(resData.error || "Failed to register document");
+      }
+
+      const documentId = resData.documentId;
       onUploadComplete(documentId);
       refreshCredits();
       setFile(null);

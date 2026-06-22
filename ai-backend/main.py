@@ -164,7 +164,16 @@ async def upload_file(file: UploadFile = File(...)):
     """Receive a file uploaded from Vercel and save it to Render's disk."""
     try:
         # Generate unique filename to avoid collisions
-        ext = os.path.splitext(file.filename)[1] if file.filename else ""
+        ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
+        
+        # Security Guard 1: Must be a PDF
+        if ext != ".pdf":
+            raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
+            
+        # Security Guard 2: Must be under 10MB
+        if file.size and file.size > 10 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File exceeds the 10MB size limit.")
+            
         unique_filename = f"{uuid.uuid4()}{ext}"
         file_path = os.path.join(TEMP_DIR, unique_filename)
         
