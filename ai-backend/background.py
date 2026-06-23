@@ -48,4 +48,4 @@ def process_document_background(document_id: str, file_url: str):
         print("====== BACKGROUND TASK FAILED ======")
         traceback.print_exc()
         print("================================")
-        update_document_status(document_id, "FAILED")
+        update_document_status(document_id, "FAILED", error_message=str(e))

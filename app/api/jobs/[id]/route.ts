@@ -22,7 +22,8 @@ export async function GET(
       documentId: doc._id,
       status: doc.processingStatus === 'READY' ? 'COMPLETED' : 'PROCESSING',
       phase: doc.processingStatus,
-      result: doc.processingStatus === 'READY' ? { ready: true } : null
+      result: doc.processingStatus === 'READY' ? { ready: true } : null,
+      error: doc.errorMessage
     }, { status: 200 });
     
   } catch (error) {

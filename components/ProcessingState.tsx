@@ -94,6 +94,12 @@ export default function ProcessingState({
           transition={{ duration: 0.5, ease: "easeOut" }}
         />
       </div>
+
+      {phase === "FAILED" && data?.error && (
+        <div className="mt-2 text-xs font-medium text-red-600 bg-red-50 p-2 rounded border border-red-100">
+          Error: {data.error}
+        </div>
+      )}
     </div>
   );
 }

@@ -170,9 +170,9 @@ async def upload_file(file: UploadFile = File(...)):
         if ext != ".pdf":
             raise HTTPException(status_code=400, detail="Only PDF files are allowed.")
             
-        # Security Guard 2: Must be under 10MB
-        if file.size and file.size > 10 * 1024 * 1024:
-            raise HTTPException(status_code=413, detail="File exceeds the 10MB size limit.")
+        # Security Guard 2: Must be under 20MB
+        if file.size and file.size > 20 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="File exceeds the 20MB size limit.")
             
         unique_filename = f"{uuid.uuid4()}{ext}"
         file_path = os.path.join(TEMP_DIR, unique_filename)

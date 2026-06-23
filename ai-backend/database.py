@@ -24,7 +24,7 @@ def get_db() -> Database:
 # Document helpers
 # ---------------------------------------------------------------------------
 
-def update_document_status(document_id: str, status: str) -> None:
+def update_document_status(document_id: str, status: str, error_message: str | None = None) -> None:
     """Update the processingStatus field of a document."""
     db = get_db()
     # Try ObjectId first, fall back to string match
@@ -32,9 +32,14 @@ def update_document_status(document_id: str, status: str) -> None:
         filter_id = ObjectId(document_id)
     except Exception:
         filter_id = document_id
+        
+    update_data = {"processingStatus": status}
+    if error_message is not None:
+        update_data["errorMessage"] = error_message
+        
     db.documents.update_one(
         {"_id": filter_id},
-        {"$set": {"processingStatus": status}},
+        {"$set": update_data},
     )
 
 

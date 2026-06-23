@@ -99,8 +99,8 @@ export default function FileUpload({
     const droppedFile = e.dataTransfer.files[0];
 
     if (droppedFile && droppedFile.type === "application/pdf") {
-      if (droppedFile.size > 10 * 1024 * 1024) {
-        setUploadError("File exceeds 10MB limit.");
+      if (droppedFile.size > 20 * 1024 * 1024) {
+        setUploadError("File exceeds 20MB limit.");
         setFile(null);
       } else {
         setFile(droppedFile);
@@ -114,8 +114,8 @@ export default function FileUpload({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) {
-        setUploadError("File exceeds 10MB limit.");
+      if (selectedFile.size > 20 * 1024 * 1024) {
+        setUploadError("File exceeds 20MB limit.");
         setFile(null);
       } else {
         setFile(selectedFile);
@@ -246,7 +246,7 @@ export default function FileUpload({
                 Drop PDF or Browse
               </p>
               <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${compact ? "text-[var(--brand-blue)]/70" : "text-[var(--gray-400)]"}`}>
-                Max 10MB
+                Max 20MB
               </p>
             </div>
           </div>

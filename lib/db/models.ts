@@ -19,7 +19,8 @@ const DocumentSchema = new mongoose.Schema({
   title: String,
   fileUrl: String, // Link to S3 or Google Cloud Storage
   pageCount: Number,
-  processingStatus: { type: String, enum: ['PENDING', 'CHUNKING', 'EMBEDDING', 'READY'] },
+  processingStatus: { type: String, enum: ['PENDING', 'CHUNKING', 'EMBEDDING', 'READY', 'FAILED'] },
+  errorMessage: String,
 });
 
 const DocumentChunkSchema = new mongoose.Schema({

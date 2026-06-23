@@ -7,7 +7,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { deductCredits } from '@/lib/db/userService';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const UPLOAD_COST = 1000;
 
 export async function POST(req: Request) {
